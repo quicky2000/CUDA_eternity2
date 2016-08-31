@@ -22,73 +22,34 @@
 #include <cassert>
 #include <stdexcept>
 
-#ifndef __global__
-#define __global__
-#endif
-
-#ifdef __NVCC__
-#define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-   if (code != cudaSuccess) 
-   {
-      std::cerr << "GPUassert: " << cudaGetErrorString(code) << " @ " << file << ":" << line << std::endl ;
-      if (abort) exit(code);
-   }
-}
-#endif // __NVCC__
+#include "my_cuda.h"
 
 typedef enum class orientation {NORTH=0,EAST,SOUTH,WEST} t_orientation;
 
 class constraint
 {
 public:
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  constraint(bool p_init=false);
 
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  constraint(const constraint & p_constraint);
+  CUDA_METHOD_HD_I constraint(bool p_init=false);
+  CUDA_METHOD_HD_I constraint(const constraint & p_constraint);
 
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  void operator=(const constraint & p_constraint);
+  CUDA_METHOD_HD_I void operator=(const constraint & p_constraint);
 
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  constraint(const constraint & p_c1,
-		    const constraint & p_c2,
-		    const constraint & p_c3,
-		    const constraint & p_c4,
-		    const constraint & p_c5
-		    );
+  CUDA_METHOD_HD_I constraint(const constraint & p_c1,
+			      const constraint & p_c2,
+			      const constraint & p_c3,
+			      const constraint & p_c4,
+			      const constraint & p_c5
+			      );
+  CUDA_METHOD_HD_I void toggle_bit(uint32_t p_index, bool p_value);
+
   inline void fill(bool p_init);
   inline void set_bit(uint32_t p_index);
   inline void unset_bit(uint32_t p_index);
 
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#endif
-  inline void toggle_bit(uint32_t p_index, bool p_value);
   inline bool get_bit(uint32_t p_index) const;
 
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#endif
-  inline int ffs(void) const;
+  CUDA_METHOD_HD_I int ffs(void) const;
 private:
   uint32_t m_words[7];
 };
@@ -108,32 +69,15 @@ inline void test_constraint(void);
 class situation_orientation
 {
 public:
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#endif
-  inline situation_orientation(void);
+  CUDA_METHOD_HD_I situation_orientation(void);
+  CUDA_METHOD_HD_I situation_orientation(const situation_orientation & p_orientation);
 
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#endif
-  inline situation_orientation(const situation_orientation & p_orientation);
-
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  void set_orientation(unsigned int p_index,
-			      uint32_t p_orientation);
+  CUDA_METHOD_HD_I void set_orientation(unsigned int p_index,
+					uint32_t p_orientation);
+  CUDA_METHOD_HD_I uint32_t get_orientation(unsigned int p_index) const;
   inline void set_orientation(unsigned int p_x_index,
 			      unsigned int p_y_index,
 			      uint32_t p_orientation);
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  uint32_t get_orientation(unsigned int p_index) const;
   inline uint32_t get_orientation(unsigned int p_x_index,
 				  unsigned int p_y_index) const;
 private:
@@ -145,23 +89,15 @@ inline void test_orientation(void);
 class situation
 {
 public:
- situation(void) = default;
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  situation(const situation & p_situation);
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  void operator=(const situation & p_situation);
+  situation(void) = default;
+  CUDA_METHOD_HD_I situation(const situation & p_situation);
+  CUDA_METHOD_HD_I void operator=(const situation & p_situation);
+
   situation_orientation m_orientations;
   uint8_t m_piece_ids[256];
 }
 ;
+
 class piece
 {
 public:
@@ -170,25 +106,14 @@ public:
   inline void set_color(uint8_t p_north_color,
 			unsigned int p_orientation);
 
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#else
-inline
-#endif
-  uint8_t get_color(unsigned int p_side) const;
+  CUDA_METHOD_HD_I uint8_t get_color(unsigned int p_side) const;
 
-#ifdef __CUDA_ARCH__
-__device__ __host__
-#endif
-  inline uint8_t get_color(unsigned int p_side, unsigned int p_orientation) const;
+  CUDA_METHOD_HD_I uint8_t get_color(unsigned int p_side, unsigned int p_orientation) const;
 private:
   uint8_t m_colors[4];
 };
 
-#ifdef __NVCC__
-__forceinline__ __device__
-#endif
-void kernel(const piece * const p_pieces, constraint (*p_constraints)[18][4], situation * p_initial_situation, int * p_initial_index)
+CUDA_KERNEL(kernel, const piece * const p_pieces, constraint (*p_constraints)[18][4], situation * p_initial_situation, int * p_initial_index)
 {
   constraint (&l_constraints)[18][4] = *p_constraints;
   situation l_situation(p_initial_situation[threadIdx.x]);
@@ -273,18 +198,12 @@ void kernel(const piece * const p_pieces, constraint (*p_constraints)[18][4], si
 	  l_max_index = l_index;
 	}
       ++l_nb_iteration;
-      __syncthreads();
     }
   p_initial_situation[threadIdx.x] = l_max_situation;
 
 }
 
-__global__
-void gpu_kernel(const piece * const p_pieces, constraint (*p_constraints)[18][4], situation * p_initial_situation, int * p_initial_index)
-{
- kernel(p_pieces, p_constraints, p_initial_situation, p_initial_index);
-}
-
+//------------------------------------------------------------------------------
 int main(void)
 {
   test_constraint();
@@ -406,9 +325,7 @@ int main(void)
   l_initial_situation.m_orientations.set_orientation(18,(unsigned int)t_orientation::SOUTH);
   l_initial_situation.m_orientations.set_orientation(16,(unsigned int)t_orientation::SOUTH);
   l_initial_situation.m_orientations.set_orientation(33,(unsigned int)t_orientation::SOUTH);
-//#ifndef __CUDA_ARCH__
-//  kernel(&l_pieces[0], (constraint (*)[18][4])l_constraints, &l_initial_state[0], &l_initial_orientation, &l_initial_index);
-//#else
+
   piece * l_pieces_ptr = nullptr;
   constraint (*l_constraints_ptr)[18][4] = nullptr;
   situation * l_initial_situation_ptr = nullptr;
@@ -426,11 +343,11 @@ int main(void)
   
   dim3 dimBlock(1,1);
   dim3 dimGrid(1,1);
-  gpu_kernel<<<dimGrid,dimBlock>>>(l_pieces_ptr,
-				   l_constraints_ptr,
-				   l_initial_situation_ptr,
-				   l_initial_index_ptr
-				   );
+  launch_kernels(kernel, dimGrid, dimBlock, l_pieces_ptr,
+		 l_constraints_ptr,
+		 l_initial_situation_ptr,
+		 l_initial_index_ptr
+		 );
 
   gpuErrChk(cudaMemcpy(&l_initial_situation, l_initial_situation_ptr, sizeof(situation), cudaMemcpyDeviceToHost));
   gpuErrChk(cudaFree(l_pieces_ptr));
