@@ -123,7 +123,7 @@ CUDA_KERNEL(kernel, const piece * const p_pieces, constraint (*p_constraints)[18
 }
 
 //------------------------------------------------------------------------------
-int main(void)
+int launch_cuda_code(void)
 {
   test_constraint();
   test_orientation();
@@ -273,9 +273,8 @@ int main(void)
   gpuErrChk(cudaFree(l_constraints_ptr));
   gpuErrChk(cudaFree(l_initial_situation_ptr));
   gpuErrChk(cudaFree(l_initial_index_ptr));
-//#endif
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 // EOF

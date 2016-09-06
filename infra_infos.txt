@@ -1,0 +1,7 @@
+depend:my_cuda
+CFLAGS:-Wall -ansi -pedantic -g -std=c++11 -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -O3 -DNDEBUG
+######:-Wall -ansi -pedantic -g -std=c++11 -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -O0 -g 
+LDFLAGS:
+NVCC_CC_CFLAGS:-Wall -ansi -g -std=c++11 -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -O3 -DNDEBUG
+NVCC_CFLAGS: -lineinfo --ptxas-options=-v -std=c++11
+NVCC_LDFLAGS:
