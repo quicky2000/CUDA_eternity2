@@ -15,11 +15,13 @@
       along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-//#include "eternity2.h"
+#include "border_enumeration.h"
+
 int launch_cuda_code(void);
 
 int main(void)
 {
+  enumerate();
   return launch_cuda_code();
 }
 // EOF
