@@ -29,8 +29,8 @@ public:
 		unsigned int p_number);
   inline unsigned int get_index(void) const;
   inline unsigned int get_number(void) const;
-  inline unsigned int decr(void);
-  inline unsigned int incr(void);
+  inline void decr(void);
+  inline void incr(void);
 private:
   unsigned int m_index;
   unsigned int m_number;
@@ -65,14 +65,14 @@ unsigned int symbol::get_number(void) const
 }
 
 //------------------------------------------------------------------------------
-unsigned int symbol::decr(void)
+void symbol::decr(void)
 {
   assert(m_number);
   --m_number;
 }
 
 //------------------------------------------------------------------------------
-unsigned int symbol::incr(void)
+void symbol::incr(void)
 {
   assert(m_number < m_max_number);
   ++m_number;
