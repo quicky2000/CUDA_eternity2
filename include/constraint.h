@@ -20,6 +20,9 @@
 
 #include <cinttypes>
 #include <cstring>
+#include "my_cuda.h"
+#include <sstream>
+#include <stdexcept>
 
 class constraint
 {

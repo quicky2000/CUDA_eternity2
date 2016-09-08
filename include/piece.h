@@ -19,6 +19,7 @@
 #ifndef _PIECE_H_
 #define _PIECE_H_
 #include <cinttypes>
+#include "my_cuda.h"
 
 class piece
 {
