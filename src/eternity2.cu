@@ -24,13 +24,10 @@
 
 #include "my_cuda.h"
 #include "constraint.h"
+#include "eternity2_types.h"
 #include "situation_orientation.h"
 #include "situation.h"
 #include "piece.h"
-
-typedef enum class orientation {NORTH=0,EAST,SOUTH,WEST} t_orientation;
-
-
 
 CUDA_KERNEL(kernel, const piece * const p_pieces, constraint (*p_constraints)[18][4], situation * p_initial_situation, int * p_initial_index)
 {
