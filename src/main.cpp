@@ -23,6 +23,7 @@
 #include "border_pieces.h"
 #include "border_color_constraint.h"
 #include "border_backtracker.h"
+#include <map>
 
 int launch_cuda_code(piece (&p_pieces)[197], constraint (&p_constraints)[18][4]);
 
@@ -99,6 +100,9 @@ int main(void)
       128
     };
 
+  // Count number of occurences for each border2center color
+  std::map<unsigned int, unsigned int> l_B2C_color_count;
+
   // Compute pieces bitfield representation
   unsigned int l_center_piece_index = 1;
   unsigned int l_center_color_index = 1;
@@ -154,11 +158,21 @@ int main(void)
 		++l_border_edge_index;
 	      }
 	    l_border_edges[l_piece_id - 1] = l_border_edge_index;
+	    unsigned int l_center_color = l_all_pieces[l_all_pieces_index][1 + ( 2 + l_border_edge_index) % 4];
 	    l_border_pieces.set_colors(l_piece_id - 1,
 				       l_all_pieces[l_all_pieces_index][1 + ( 3 + l_border_edge_index) % 4],
-				       l_all_pieces[l_all_pieces_index][1 + ( 2 + l_border_edge_index) % 4],
+				       l_center_color,
 				       l_all_pieces[l_all_pieces_index][1 + ( 1 + l_border_edge_index) % 4]
 				       );
+	    std::map<unsigned int, unsigned int>::iterator l_iter = l_B2C_color_count.find(l_center_color);
+	    if(l_B2C_color_count.end() != l_iter)
+	      {
+		++(l_iter->second);
+	      }
+	    else
+	      {
+		l_B2C_color_count.insert(std::map<unsigned int, unsigned int>::value_type(l_center_color,1));
+	      }
 	  }
 	  break;
 	case 2:
@@ -190,7 +204,7 @@ int main(void)
 	}
     }
 
-  launch_border_bactracker(l_border_pieces, l_border_constraints, l_border_edges);
+  launch_border_bactracker(l_border_pieces, l_border_constraints, l_border_edges, l_B2C_color_count);
   return launch_cuda_code(l_pieces, l_constraints);
 }
 // EOF

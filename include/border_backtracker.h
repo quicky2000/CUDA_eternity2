@@ -17,9 +17,15 @@
 #ifndef _BORDER_BACK_TRACKER_H_
 #define _BORDER_BACK_TRACKER_H_
 
+#include <map>
+
+class border_pieces;
+class border_color_constraint;
+
 int launch_border_bactracker(const border_pieces & p_border_pieces,
 			     border_color_constraint  (&p_border_constraints)[23],
-			     const unsigned int (&p_border_edges)[60]
+			     const unsigned int (&p_border_edges)[60],
+			     const std::map<unsigned int, unsigned int> & p_B2C_color_count
 			     );
 
 #endif // _BORDER_BACK_TRACKER_H_
