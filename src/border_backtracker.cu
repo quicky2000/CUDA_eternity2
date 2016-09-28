@@ -25,7 +25,7 @@
 #include <iomanip>
 #include <string>
 
-CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, border_color_constraint  (&p_border_constraints)[23], octet_array & p_initial_constraint)
+CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, border_color_constraint  (&p_border_constraints)[23], octet_array * p_initial_constraint)
 {
   unsigned int l_index = 0;
   border_color_constraint l_available_pieces[60];
@@ -40,7 +40,7 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
       unsigned int l_piece_id = l_solution.get_octet(l_previous_index);
       unsigned int l_color =  l_piece_id ? p_border_pieces.get_right(l_piece_id - 1) : 0;
       l_available_transitions[l_index] & p_border_constraints[l_color];
-      l_available_transitions[l_index] & p_border_constraints[p_initial_constraint.get_octet(l_index)];
+      l_available_transitions[l_index] & p_border_constraints[p_initial_constraint[threadIdx.x].get_octet(l_index)];
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
       l_piece_id = l_solution.get_octet(l_next_index);
       l_color = l_piece_id ? p_border_pieces.get_left(l_piece_id - 1) : 0;
@@ -66,7 +66,7 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
  
     }
   while(!l_ended);
-  p_initial_constraint = l_solution;
+  p_initial_constraint[threadIdx.x] = l_solution;
 }
 
 //------------------------------------------------------------------------------
@@ -76,32 +76,37 @@ int launch_border_bactracker(const border_pieces & p_border_pieces,
 			     const std::map<unsigned int, unsigned int> & p_B2C_color_count
 			     )
 {
-  octet_array l_initial_constraint;
+  unsigned int l_block_size = 32;
+  std::cout << "Block-size = " << l_block_size << std::endl;
+  octet_array * l_initial_constraint = new octet_array[l_block_size];
 
   border_constraint_generator l_generator(p_B2C_color_count);
 
   bool l_found = false;
   uint64_t l_fail_counter = 0;
-
-  while(!l_found && l_fail_counter < 1000000)
+  unsigned int l_nb_loop = 0;
+  while(!l_found && l_fail_counter < 1024 * 1024)
     {
-      l_generator.generate(l_initial_constraint);
-
-      std::map<unsigned int,unsigned int> l_check;
-      for(unsigned int l_octet = 0; l_octet < 60; ++l_octet)
+      for(unsigned int l_index = 0; l_index < l_block_size; ++l_index)
 	{
-#if 0
-	  std::cout << std::setw(2) << l_initial_constraint.get_octet(l_octet) << " " ;
-#endif
-	  if(l_initial_constraint.get_octet(l_octet))
+	  l_generator.generate(l_initial_constraint[l_index]);
+
+	  std::map<unsigned int,unsigned int> l_check;
+	  for(unsigned int l_octet = 0; l_octet < 60; ++l_octet)
 	    {
-	      l_check[l_initial_constraint.get_octet(l_octet)]++;
-	    }
-	}
 #if 0
-      std::cout << std::endl ;
+	      std::cout << std::setw(2) << l_initial_constraint.get_octet(l_octet) << " " ;
 #endif
-      assert(l_check == p_B2C_color_count);
+	      if(l_initial_constraint[l_index].get_octet(l_octet))
+		{
+		  l_check[l_initial_constraint[l_index].get_octet(l_octet)]++;
+		}
+	    }
+#if 0
+	  std::cout << std::endl ;
+#endif
+	  assert(l_check == p_B2C_color_count);
+	}
 
       // Prepare pointers for memory allocation on GPU
       octet_array * l_initial_constraint_ptr = nullptr;
@@ -109,94 +114,99 @@ int launch_border_bactracker(const border_pieces & p_border_pieces,
       border_color_constraint  (* l_border_constraints_ptr)[23] = nullptr;
 
       // Allocate pointers on GPU
-      gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, sizeof(octet_array)));
+      gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, l_block_size * sizeof(octet_array)));
       gpuErrChk(cudaMalloc(&l_border_pieces_ptr, sizeof(border_pieces)));
       gpuErrChk(cudaMalloc(&l_border_constraints_ptr, 23 * sizeof(border_color_constraint)));
 
-      gpuErrChk(cudaMemcpy(l_initial_constraint_ptr, &l_initial_constraint, sizeof(l_initial_constraint), cudaMemcpyHostToDevice));
+      gpuErrChk(cudaMemcpy(l_initial_constraint_ptr, &l_initial_constraint[0], l_block_size * sizeof(octet_array), cudaMemcpyHostToDevice));
       gpuErrChk(cudaMemcpy(l_border_pieces_ptr, &p_border_pieces, sizeof(border_pieces), cudaMemcpyHostToDevice));
       gpuErrChk(cudaMemcpy(l_border_constraints_ptr, &p_border_constraints[0], 23 * sizeof(border_color_constraint), cudaMemcpyHostToDevice));
 
-      dim3 dimBlock(1,1);
+      dim3 dimBlock(l_block_size,1);
       dim3 dimGrid(1,1);
       launch_kernels(border_backtracker_kernel, dimGrid, dimBlock, *l_border_pieces_ptr,
 		     *l_border_constraints_ptr,
-		     *l_initial_constraint_ptr
+		     l_initial_constraint_ptr
 		     );
 
 
-      gpuErrChk(cudaMemcpy(&l_initial_constraint, l_initial_constraint_ptr, sizeof(l_initial_constraint), cudaMemcpyDeviceToHost));
+      gpuErrChk(cudaMemcpy(&l_initial_constraint[0], l_initial_constraint_ptr, l_block_size * sizeof(octet_array), cudaMemcpyDeviceToHost));
 
       // Free pointers on GPU
       gpuErrChk(cudaFree(l_initial_constraint_ptr));
       gpuErrChk(cudaFree(l_border_pieces_ptr));
       gpuErrChk(cudaFree(l_border_constraints_ptr));
 
-      if(l_initial_constraint.get_octet(0))
+      for(unsigned int l_index = 0; l_index < l_block_size; ++l_index)
 	{
-	  std::string l_result;
-	  char l_orientation2string[4] = {'N', 'E', 'S', 'W'};
-	  for(unsigned int l_y = 0; l_y < 16; ++l_y)
+	  if(l_initial_constraint[l_index].get_octet(0))
 	    {
-	      for(unsigned int l_x = 0; l_x < 16; ++l_x)
+	      std::string l_result;
+	      char l_orientation2string[4] = {'N', 'E', 'S', 'W'};
+	      for(unsigned int l_y = 0; l_y < 16; ++l_y)
 		{
-		  std::stringstream l_stream;
-		  if(0 == l_y && 0 == l_x)
+		  for(unsigned int l_x = 0; l_x < 16; ++l_x)
 		    {
-		      l_stream << std::setw(3) << l_initial_constraint.get_octet(0) << l_orientation2string[(p_border_edges[l_initial_constraint.get_octet(0) - 1] + 1) % 4];
-		      l_result += l_stream.str();
+		      std::stringstream l_stream;
+		      if(0 == l_y && 0 == l_x)
+			{
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(0) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(0) - 1] + 1) % 4];
+			  l_result += l_stream.str();
+			}
+		      else if(0 == l_y && 15 == l_x)
+			{
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(15) << l_orientation2string[p_border_edges[l_initial_constraint[l_index].get_octet(15) - 1]];
+			  l_result += l_stream.str();
+			}
+		      else if(15 == l_y && 15 == l_x)
+			{
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(30) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(30) - 1] + 3) % 4];
+			  l_result += l_stream.str();
+			}
+		      else if(15 == l_y && 0 == l_x)
+			{
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(45) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(45) - 1] + 2) % 4];
+			  l_result += l_stream.str();
+			}
+		      else if(0 == l_y)
+			{
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(l_x) << l_orientation2string[p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1]];
+			  l_result += l_stream.str();
+			}
+		      else if(15 == l_x)
+			{
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(15 + l_y) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 3) % 4];
+			  l_result += l_stream.str();
+			}
+		      else if(15 == l_y)
+			{
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(30 - l_x + 15) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 2) % 4];
+			  l_result += l_stream.str();
+			}
+		      else if(0 == l_x)
+			{
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(45 - l_y + 15) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 1) % 4];
+			  l_result += l_stream.str();
+			}
+		      else
+			{
+			  l_result += "----";
+			}
 		    }
-		  else if(0 == l_y && 15 == l_x)
-		    {
-		      l_stream << std::setw(3) << l_initial_constraint.get_octet(15) << l_orientation2string[p_border_edges[l_initial_constraint.get_octet(15) - 1]];
-		      l_result += l_stream.str();
-		    }
-		  else if(15 == l_y && 15 == l_x)
-		    {
-		      l_stream << std::setw(3) << l_initial_constraint.get_octet(30) << l_orientation2string[(p_border_edges[l_initial_constraint.get_octet(30) - 1] + 3) % 4];
-		      l_result += l_stream.str();
-		    }
-		  else if(15 == l_y && 0 == l_x)
-		    {
-		      l_stream << std::setw(3) << l_initial_constraint.get_octet(45) << l_orientation2string[(p_border_edges[l_initial_constraint.get_octet(45) - 1] + 2) % 4];
-		      l_result += l_stream.str();
-		    }
-		  else if(0 == l_y)
-		    {
-		      l_stream << std::setw(3) << l_initial_constraint.get_octet(l_x) << l_orientation2string[p_border_edges[l_initial_constraint.get_octet(l_x) - 1]];
-		      l_result += l_stream.str();
-		    }
-		  else if(15 == l_x)
-		    {
-		      l_stream << std::setw(3) << l_initial_constraint.get_octet(15 + l_y) << l_orientation2string[(p_border_edges[l_initial_constraint.get_octet(l_x) - 1] + 3) % 4];
-		      l_result += l_stream.str();
-		    }
-		  else if(15 == l_y)
-		    {
-		      l_stream << std::setw(3) << l_initial_constraint.get_octet(30 - l_x + 15) << l_orientation2string[(p_border_edges[l_initial_constraint.get_octet(l_x) - 1] + 2) % 4];
-		      l_result += l_stream.str();
-		    }
-		  else if(0 == l_x)
-		    {
-		      l_stream << std::setw(3) << l_initial_constraint.get_octet(45 - l_y + 15) << l_orientation2string[(p_border_edges[l_initial_constraint.get_octet(l_x) - 1] + 1) % 4];
-		      l_result += l_stream.str();
-		    }
-		  else
-		    {
-		      l_result += "----";
-		    }
+		  //  l_result += "\n";
 		}
-	      //  l_result += "\n";
+	      std::cout << "\"" << l_result << "\"" << std::endl ;
+	      l_found = true;
 	    }
-	  std::cout << "\"" << l_result << "\"" << std::endl ;
-	  l_found = true;
+	  else
+	    {
+	      ++l_fail_counter;
+	    }
 	}
-      else
-	{
-	  ++l_fail_counter;
-	}
+      ++l_nb_loop;
     }
-  std::cout << l_fail_counter << " fails" << std::endl ;
+  std::cout << "Nb loop : " << l_nb_loop << std::endl;
+  std::cout << l_fail_counter << " fails" << std::endl;
   return EXIT_SUCCESS;
 }
 // EOF
