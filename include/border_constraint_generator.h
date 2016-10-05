@@ -37,7 +37,11 @@ class border_constraint_generator
 
 //------------------------------------------------------------------------------
 border_constraint_generator::border_constraint_generator(const std::map<unsigned int, unsigned int> & p_B2C_color_count):
+#ifndef DETERMINISTIC_SEED
   m_seed2{m_random_device(), m_random_device(), m_random_device(), m_random_device(), m_random_device(), m_random_device(), m_random_device(), m_random_device()},
+#else
+  m_seed2{0, 0, 0, 0, 0, 0, 0, 0},
+#endif // DETERMINISTIC_SEED
   m_random_engine(m_seed2)
 {
   unsigned int l_total;
