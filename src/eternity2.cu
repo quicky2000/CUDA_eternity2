@@ -15,6 +15,7 @@
       You should have received a copy of the GNU General Public License
       along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
+#ifdef ACTIVATE_ETERNITY2_KERNEL
 #include <iostream>
 #include <cinttypes>
 #include <cstring>
@@ -171,4 +172,5 @@ int launch_cuda_code(piece (&p_pieces)[197], constraint (&p_constraints)[18][4])
   return EXIT_SUCCESS;
 }
 
+#endif // ACTIVATE_ETERNITY2_KERNEL
 // EOF

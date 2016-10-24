@@ -205,6 +205,10 @@ int main(void)
     }
 
   launch_border_bactracker(l_border_pieces, l_border_constraints, l_border_edges, l_B2C_color_count);
-  return launch_cuda_code(l_pieces, l_constraints);
+
+#ifdef ACTIVATE_ETERNITY2_KERNEL
+  launch_cuda_code(l_pieces, l_constraints);
+#endif // ACTIVATE_ETERNITY2_KERNEL
+  return EXIT_SUCCESS;
 }
 // EOF
