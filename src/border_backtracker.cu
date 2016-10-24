@@ -40,7 +40,7 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
       unsigned int l_piece_id = l_solution.get_octet(l_previous_index);
       unsigned int l_color =  l_piece_id ? p_border_pieces.get_right(l_piece_id - 1) : 0;
       l_available_transitions[l_index] & p_border_constraints[l_color];
-      l_available_transitions[l_index] & p_border_constraints[p_initial_constraint[threadIdx.x].get_octet(l_index)];
+      l_available_transitions[l_index] & p_border_constraints[p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_octet(l_index)];
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
       l_piece_id = l_solution.get_octet(l_next_index);
       l_color = l_piece_id ? p_border_pieces.get_left(l_piece_id - 1) : 0;
@@ -66,19 +66,23 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
  
     }
   while(!l_ended);
-  p_initial_constraint[threadIdx.x] = l_solution;
+  p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x] = l_solution;
 }
 
 //------------------------------------------------------------------------------
-int launch_border_bactracker(const border_pieces & p_border_pieces,
+int launch_border_bactracker(unsigned int p_nb_block,
+			     unsigned int p_nb_thread,
+			     const border_pieces & p_border_pieces,
 			     border_color_constraint  (&p_border_constraints)[23],
 			     const unsigned int (&p_border_edges)[60],
 			     const std::map<unsigned int, unsigned int> & p_B2C_color_count
 			     )
 {
-  unsigned int l_block_size = 32;
-  std::cout << "Block-size = " << l_block_size << std::endl;
-  octet_array * l_initial_constraint = new octet_array[l_block_size];
+  unsigned int l_block_size = p_nb_thread;
+  std::cout << "Nb blocks : " << p_nb_block << std::endl;
+  std::cout << "Block_size : " << l_block_size << " threads" << std::endl;
+  unsigned int l_nb_constraints = l_block_size * p_nb_block;
+  octet_array * l_initial_constraint = new octet_array[l_nb_constraints];
 
   border_constraint_generator l_generator(p_B2C_color_count);
 
@@ -87,7 +91,7 @@ int launch_border_bactracker(const border_pieces & p_border_pieces,
   unsigned int l_nb_loop = 0;
   while(!l_found && l_fail_counter < 1024 * 1024)
     {
-      for(unsigned int l_index = 0; l_index < l_block_size; ++l_index)
+      for(unsigned int l_index = 0; l_index < l_nb_constraints; ++l_index)
 	{
 	  l_generator.generate(l_initial_constraint[l_index]);
 
@@ -114,30 +118,30 @@ int launch_border_bactracker(const border_pieces & p_border_pieces,
       border_color_constraint  (* l_border_constraints_ptr)[23] = nullptr;
 
       // Allocate pointers on GPU
-      gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, l_block_size * sizeof(octet_array)));
+      gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, l_nb_constraints * sizeof(octet_array)));
       gpuErrChk(cudaMalloc(&l_border_pieces_ptr, sizeof(border_pieces)));
       gpuErrChk(cudaMalloc(&l_border_constraints_ptr, 23 * sizeof(border_color_constraint)));
 
-      gpuErrChk(cudaMemcpy(l_initial_constraint_ptr, &l_initial_constraint[0], l_block_size * sizeof(octet_array), cudaMemcpyHostToDevice));
+      gpuErrChk(cudaMemcpy(l_initial_constraint_ptr, &l_initial_constraint[0], l_nb_constraints * sizeof(octet_array), cudaMemcpyHostToDevice));
       gpuErrChk(cudaMemcpy(l_border_pieces_ptr, &p_border_pieces, sizeof(border_pieces), cudaMemcpyHostToDevice));
       gpuErrChk(cudaMemcpy(l_border_constraints_ptr, &p_border_constraints[0], 23 * sizeof(border_color_constraint), cudaMemcpyHostToDevice));
 
       dim3 dimBlock(l_block_size,1);
-      dim3 dimGrid(1,1);
+      dim3 dimGrid(p_nb_block,1);
       launch_kernels(border_backtracker_kernel, dimGrid, dimBlock, *l_border_pieces_ptr,
 		     *l_border_constraints_ptr,
 		     l_initial_constraint_ptr
 		     );
 
 
-      gpuErrChk(cudaMemcpy(&l_initial_constraint[0], l_initial_constraint_ptr, l_block_size * sizeof(octet_array), cudaMemcpyDeviceToHost));
+      gpuErrChk(cudaMemcpy(&l_initial_constraint[0], l_initial_constraint_ptr, l_nb_constraints * sizeof(octet_array), cudaMemcpyDeviceToHost));
 
       // Free pointers on GPU
       gpuErrChk(cudaFree(l_initial_constraint_ptr));
       gpuErrChk(cudaFree(l_border_pieces_ptr));
       gpuErrChk(cudaFree(l_border_constraints_ptr));
 
-      for(unsigned int l_index = 0; l_index < l_block_size; ++l_index)
+      for(unsigned int l_index = 0; l_index < l_nb_constraints ; ++l_index)
 	{
 	  if(l_initial_constraint[l_index].get_octet(0))
 	    {
