@@ -101,7 +101,7 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 	  for(unsigned int l_octet = 0; l_octet < 60; ++l_octet)
 	    {
 #if 0
-	      std::cout << std::setw(2) << l_initial_constraint.get_octet(l_octet) << " " ;
+	      std::cout << std::setw(2) << l_initial_constraint[l_index].get_octet(l_octet) << " " ;
 #endif
 	      if(l_initial_constraint[l_index].get_octet(l_octet))
 		{
