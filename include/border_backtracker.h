@@ -22,7 +22,8 @@
 class border_pieces;
 class border_color_constraint;
 
-int launch_border_bactracker(unsigned int p_nb_block,
+int launch_border_bactracker(unsigned int p_nb_cases,
+			     unsigned int p_nb_block,
 			     unsigned int p_nb_thread,
 			     const border_pieces & p_border_pieces,
 			     border_color_constraint  (&p_border_constraints)[23],

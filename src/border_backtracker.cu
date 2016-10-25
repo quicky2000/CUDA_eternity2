@@ -70,7 +70,8 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
 }
 
 //------------------------------------------------------------------------------
-int launch_border_bactracker(unsigned int p_nb_block,
+int launch_border_bactracker(unsigned int p_nb_cases,
+			     unsigned int p_nb_block,
 			     unsigned int p_nb_thread,
 			     const border_pieces & p_border_pieces,
 			     border_color_constraint  (&p_border_constraints)[23],
@@ -79,6 +80,7 @@ int launch_border_bactracker(unsigned int p_nb_block,
 			     )
 {
   unsigned int l_block_size = p_nb_thread;
+  std::cout << "Nb cases : " << p_nb_cases << std::endl;
   std::cout << "Nb blocks : " << p_nb_block << std::endl;
   std::cout << "Block_size : " << l_block_size << " threads" << std::endl;
   unsigned int l_nb_constraints = l_block_size * p_nb_block;
@@ -89,7 +91,7 @@ int launch_border_bactracker(unsigned int p_nb_block,
   bool l_found = false;
   uint64_t l_fail_counter = 0;
   unsigned int l_nb_loop = 0;
-  while(!l_found && l_fail_counter < 1024 * 1024)
+  while(!l_found && l_fail_counter < p_nb_cases)
     {
       for(unsigned int l_index = 0; l_index < l_nb_constraints; ++l_index)
 	{

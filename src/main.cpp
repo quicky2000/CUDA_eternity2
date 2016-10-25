@@ -42,11 +42,15 @@ int main(int argc,char ** argv)
       parameter_manager::parameter_if l_block_size_param("block_size",true);
       l_param_manager.add(l_block_size_param);
 
+      parameter_manager::parameter_if l_nb_cases_param("nb_cases",true);
+      l_param_manager.add(l_nb_cases_param);
+
       // Treating parameters
       l_param_manager.treat_parameters(argc,argv);
 
       unsigned int l_nb_block = l_nb_block_param.get_value<std::string>() == "" ? 1 : l_nb_block_param.get_value<int>();
       unsigned int l_block_size = l_block_size_param.get_value<std::string>() == "" ? 128 : l_block_size_param.get_value<int>();
+      unsigned int l_nb_cases = l_nb_cases_param.get_value<std::string>() == "" ? 1024 * 1024 : l_nb_cases_param.get_value<int>();
 
       enumerate();
 
@@ -223,7 +227,7 @@ int main(int argc,char ** argv)
 	    }
 	}
 
-      launch_border_bactracker(l_nb_block,l_block_size,l_border_pieces, l_border_constraints, l_border_edges, l_B2C_color_count);
+      launch_border_bactracker(l_nb_cases, l_nb_block, l_block_size, l_border_pieces, l_border_constraints, l_border_edges, l_B2C_color_count);
 
 #ifdef ACTIVATE_ETERNITY2_KERNEL
       launch_cuda_code(l_pieces, l_constraints);
