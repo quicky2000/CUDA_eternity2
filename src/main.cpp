@@ -17,6 +17,7 @@
 
 #include "quicky_exception.h"
 #include "parameter_manager.h"
+#include "parameter.h"
 #include "border_enumeration.h"
 #include "piece.h"
 #include "constraint.h"
@@ -36,21 +37,21 @@ int main(int argc,char ** argv)
       // Defining application command line parameters
       parameter_manager::parameter_manager l_param_manager("edge_matching_puzzle.exe","--",0);
 
-      parameter_manager::parameter_if l_nb_block_param("nb_block",true);
+      parameter_manager::parameter<int> l_nb_block_param("nb_block",true,1);
       l_param_manager.add(l_nb_block_param);
 
-      parameter_manager::parameter_if l_block_size_param("block_size",true);
+      parameter_manager::parameter<int> l_block_size_param("block_size",true,128);
       l_param_manager.add(l_block_size_param);
 
-      parameter_manager::parameter_if l_nb_cases_param("nb_cases",true);
+      parameter_manager::parameter<int> l_nb_cases_param("nb_cases",true,1024 * 1024);
       l_param_manager.add(l_nb_cases_param);
 
       // Treating parameters
       l_param_manager.treat_parameters(argc,argv);
 
-      unsigned int l_nb_block = l_nb_block_param.get_value<std::string>() == "" ? 1 : l_nb_block_param.get_value<int>();
-      unsigned int l_block_size = l_block_size_param.get_value<std::string>() == "" ? 128 : l_block_size_param.get_value<int>();
-      unsigned int l_nb_cases = l_nb_cases_param.get_value<std::string>() == "" ? 1024 * 1024 : l_nb_cases_param.get_value<int>();
+      unsigned int l_nb_block = l_nb_block_param.get_value();
+      unsigned int l_block_size = l_block_size_param.get_value();
+      unsigned int l_nb_cases = l_nb_cases_param.get_value();
 
       enumerate();
 
