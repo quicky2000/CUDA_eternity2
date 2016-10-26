@@ -88,6 +88,19 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 
   border_constraint_generator l_generator(p_B2C_color_count);
 
+  // Prepare pointers for memory allocation on GPU
+  octet_array * l_initial_constraint_ptr = nullptr;
+  border_pieces * l_border_pieces_ptr = nullptr;
+  border_color_constraint  (* l_border_constraints_ptr)[23] = nullptr;
+
+  // Allocate pointers on GPU
+  gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, l_nb_constraints * sizeof(octet_array)));
+  gpuErrChk(cudaMalloc(&l_border_pieces_ptr, sizeof(border_pieces)));
+  gpuErrChk(cudaMalloc(&l_border_constraints_ptr, 23 * sizeof(border_color_constraint)));
+
+  gpuErrChk(cudaMemcpy(l_border_pieces_ptr, &p_border_pieces, sizeof(border_pieces), cudaMemcpyHostToDevice));
+  gpuErrChk(cudaMemcpy(l_border_constraints_ptr, &p_border_constraints[0], 23 * sizeof(border_color_constraint), cudaMemcpyHostToDevice));
+
   bool l_found = false;
   uint64_t l_fail_counter = 0;
   unsigned int l_nb_loop = 0;
@@ -114,19 +127,7 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 	  assert(l_check == p_B2C_color_count);
 	}
 
-      // Prepare pointers for memory allocation on GPU
-      octet_array * l_initial_constraint_ptr = nullptr;
-      border_pieces * l_border_pieces_ptr = nullptr;
-      border_color_constraint  (* l_border_constraints_ptr)[23] = nullptr;
-
-      // Allocate pointers on GPU
-      gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, l_nb_constraints * sizeof(octet_array)));
-      gpuErrChk(cudaMalloc(&l_border_pieces_ptr, sizeof(border_pieces)));
-      gpuErrChk(cudaMalloc(&l_border_constraints_ptr, 23 * sizeof(border_color_constraint)));
-
       gpuErrChk(cudaMemcpy(l_initial_constraint_ptr, &l_initial_constraint[0], l_nb_constraints * sizeof(octet_array), cudaMemcpyHostToDevice));
-      gpuErrChk(cudaMemcpy(l_border_pieces_ptr, &p_border_pieces, sizeof(border_pieces), cudaMemcpyHostToDevice));
-      gpuErrChk(cudaMemcpy(l_border_constraints_ptr, &p_border_constraints[0], 23 * sizeof(border_color_constraint), cudaMemcpyHostToDevice));
 
       dim3 dimBlock(l_block_size,1);
       dim3 dimGrid(p_nb_block,1);
@@ -137,11 +138,6 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 
 
       gpuErrChk(cudaMemcpy(&l_initial_constraint[0], l_initial_constraint_ptr, l_nb_constraints * sizeof(octet_array), cudaMemcpyDeviceToHost));
-
-      // Free pointers on GPU
-      gpuErrChk(cudaFree(l_initial_constraint_ptr));
-      gpuErrChk(cudaFree(l_border_pieces_ptr));
-      gpuErrChk(cudaFree(l_border_constraints_ptr));
 
       for(unsigned int l_index = 0; l_index < l_nb_constraints ; ++l_index)
 	{
@@ -211,6 +207,13 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 	}
       ++l_nb_loop;
     }
+
+  // Free pointers on GPU
+  gpuErrChk(cudaFree(l_initial_constraint_ptr));
+  gpuErrChk(cudaFree(l_border_pieces_ptr));
+  gpuErrChk(cudaFree(l_border_constraints_ptr));
+
+
   std::cout << "Nb loop : " << l_nb_loop << std::endl;
   std::cout << l_fail_counter << " fails" << std::endl;
   return EXIT_SUCCESS;
