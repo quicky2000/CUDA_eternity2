@@ -44,7 +44,7 @@ border_constraint_generator::border_constraint_generator(const std::map<unsigned
 #endif // DETERMINISTIC_SEED
   m_random_engine(m_seed2)
 {
-  unsigned int l_total;
+  unsigned int l_total = 0;
   unsigned int l_index = 0;
   for(auto l_iter:p_B2C_color_count)
     {
