@@ -35,7 +35,7 @@ int main(int argc,char ** argv)
   try
     {
       // Defining application command line parameters
-      parameter_manager::parameter_manager l_param_manager("edge_matching_puzzle.exe","--",0);
+      parameter_manager::parameter_manager l_param_manager("CUDA_eternity2.exe","--",0);
 
       parameter_manager::parameter<int> l_nb_block_param("nb_block",true,1);
       l_param_manager.add(l_nb_block_param);
@@ -46,12 +46,16 @@ int main(int argc,char ** argv)
       parameter_manager::parameter<int> l_nb_cases_param("nb_cases",true,1024 * 1024);
       l_param_manager.add(l_nb_cases_param);
 
+      parameter_manager::parameter<std::string> l_initial_situation_param("initial_situation",true,"");
+      l_param_manager.add(l_initial_situation_param);
+
       // Treating parameters
       l_param_manager.treat_parameters(argc,argv);
 
       unsigned int l_nb_block = l_nb_block_param.get_value();
       unsigned int l_block_size = l_block_size_param.get_value();
       unsigned int l_nb_cases = l_nb_cases_param.get_value();
+      std::string l_initial_situation = l_initial_situation_param.get_value();
 
       enumerate();
 
@@ -228,7 +232,7 @@ int main(int argc,char ** argv)
 	    }
 	}
 
-      launch_border_bactracker(l_nb_cases, l_nb_block, l_block_size, l_border_pieces, l_border_constraints, l_border_edges, l_B2C_color_count);
+      launch_border_bactracker(l_nb_cases, l_nb_block, l_block_size, l_initial_situation, l_border_pieces, l_border_constraints, l_border_edges, l_B2C_color_count);
 
 #ifdef ACTIVATE_ETERNITY2_KERNEL
       launch_cuda_code(l_pieces, l_constraints);

@@ -73,6 +73,7 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
 int launch_border_bactracker(unsigned int p_nb_cases,
 			     unsigned int p_nb_block,
 			     unsigned int p_nb_thread,
+			     const std::string & p_initial_situation,
 			     const border_pieces & p_border_pieces,
 			     border_color_constraint  (&p_border_constraints)[23],
 			     const unsigned int (&p_border_edges)[60],
@@ -85,6 +86,8 @@ int launch_border_bactracker(unsigned int p_nb_cases,
   std::cout << "Block_size : " << l_block_size << " threads" << std::endl;
   unsigned int l_nb_constraints = l_block_size * p_nb_block;
   octet_array * l_initial_constraint = new octet_array[l_nb_constraints];
+
+  std::string l_situation_string = p_initial_situation;
 
   border_constraint_generator l_generator(p_B2C_color_count);
 
@@ -125,6 +128,45 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 	  std::cout << std::endl ;
 #endif
 	  assert(l_check == p_B2C_color_count);
+
+	  if("" != l_situation_string)
+	    {
+	      assert(256 * 4 == l_situation_string.size());
+	      for(unsigned int l_situation_index = 0 ; l_situation_index < 256 ; ++l_situation_index)
+		{
+		  std::string l_piece_id_str = l_situation_string.substr(l_situation_index * 4,3);
+		  if("---" != l_piece_id_str)
+		    {
+		      unsigned int l_piece_id = std::stoi(l_piece_id_str);
+		      unsigned int l_constraint_index= 0;
+		      bool l_meaningful = true;
+		      if(l_situation_index < 16)
+			{
+			  l_constraint_index = l_situation_index;
+			}
+		      else if(15 == l_situation_index % 16)
+			{
+			  l_constraint_index = 15 + (l_situation_index / 16);
+			}
+		      else if(15 == l_situation_index / 16)
+			{
+			  l_constraint_index = 255 - l_situation_index + 30;
+			}
+		      else if(0 == l_situation_index % 16)
+			{
+			  l_constraint_index = 45 - (l_situation_index / 16 ) + 15;
+			}
+		      else
+			{
+			  l_meaningful = false;
+			}
+		      if(l_meaningful)
+			{
+			  l_initial_constraint[l_index].set_octet(l_constraint_index, p_border_pieces.get_center(l_piece_id - 1));
+			}
+		    }
+		}
+	    }
 	}
 
       gpuErrChk(cudaMemcpy(l_initial_constraint_ptr, &l_initial_constraint[0], l_nb_constraints * sizeof(octet_array), cudaMemcpyHostToDevice));
