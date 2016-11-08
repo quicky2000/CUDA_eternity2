@@ -228,7 +228,6 @@ int main(int argc,char ** argv)
 	    {
 	      l_border_constraints[l_border_pieces.get_left(l_piece_id - 1)].set_bit(l_piece_id - 1);
 	      l_border_constraints[l_border_pieces.get_center(l_piece_id - 1)].set_bit(l_piece_id - 1);
-	      l_border_constraints[l_border_pieces.get_right(l_piece_id - 1)].set_bit(l_piece_id - 1);
 	    }
 	}
 

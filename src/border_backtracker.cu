@@ -42,9 +42,6 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
       l_available_transitions[l_index] & p_border_constraints[l_color];
       l_available_transitions[l_index] & p_border_constraints[p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_octet(l_index)];
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
-      l_piece_id = l_solution.get_octet(l_next_index);
-      l_color = l_piece_id ? p_border_pieces.get_left(l_piece_id - 1) : 0;
-      l_available_transitions[l_index] & p_border_constraints[l_color];
       uint64_t l_corner_mask = (0 == l_index || 15 == l_index || 30 == l_index || 45 == l_index) ? 0xF : UINT64_MAX;
       l_available_transitions[l_index] & l_corner_mask;
       l_available_transitions[l_index] & l_available_pieces[l_previous_index];
