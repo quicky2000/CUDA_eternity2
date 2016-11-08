@@ -255,7 +255,7 @@ int launch_border_bactracker(unsigned int p_nb_cases,
   gpuErrChk(cudaFree(l_border_pieces_ptr));
   gpuErrChk(cudaFree(l_border_constraints_ptr));
 
-
+  delete[] l_initial_constraint;
   std::cout << "Nb loop : " << l_nb_loop << std::endl;
   std::cout << l_fail_counter << " fails" << std::endl;
   return EXIT_SUCCESS;
