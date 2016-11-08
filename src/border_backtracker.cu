@@ -28,8 +28,9 @@
 CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, border_color_constraint  (&p_border_constraints)[23], octet_array * p_initial_constraint)
 {
   unsigned int l_index = 0;
-  border_color_constraint l_available_pieces[60];
-  l_available_pieces[59].fill(true);
+  border_color_constraint l_available_pieces(true);
+  octet_array l_used_pieces;
+  l_used_pieces.set_octet(59,63);
   border_color_constraint l_available_transitions[60];
   l_available_transitions[0].fill(true);
   octet_array l_solution;
@@ -44,17 +45,21 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
       uint64_t l_corner_mask = (0 == l_index || 15 == l_index || 30 == l_index || 45 == l_index) ? 0xF : UINT64_MAX;
       l_available_transitions[l_index] & l_corner_mask;
-      l_available_transitions[l_index] & l_available_pieces[l_previous_index];
+      l_available_transitions[l_index] & l_available_pieces;
       int l_ffs = l_available_transitions[l_index].ffs();
 
       // Detect the end in case we have found no solution ( index 0 and no candidate)
       // or in case we are at the end ( next_index = 0 and there is one candidate)
       l_ended = (!l_index && !l_ffs) || (!l_next_index && l_ffs);
 
-      // Apply mask to indicate the piece we will check for
-      l_available_pieces[l_index] = l_available_pieces[l_previous_index];
+      // Record piece that has been selected (1 to 60)
+      l_used_pieces.set_octet(l_index, l_ffs);
       l_available_transitions[l_index].toggle_bit(l_ffs - 1, l_ffs);
-      l_available_pieces[l_index].toggle_bit(l_ffs - 1, l_ffs);
+
+      // Remove the piece from list of available pieces if a transition was
+      // possible or restablish it to prepare come back to previous state
+      unsigned int l_toggled_index = l_ffs ? l_ffs : l_used_pieces.get_octet(l_previous_index);
+      l_available_pieces.toggle_bit(l_toggled_index - 1,true);
       l_available_transitions[l_next_index].fill(true);
 
       // Prepare for next pieces
