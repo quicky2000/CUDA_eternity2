@@ -57,7 +57,7 @@ int main(int argc,char ** argv)
       unsigned int l_nb_cases = l_nb_cases_param.get_value();
       std::string l_initial_situation = l_initial_situation_param.get_value();
 
-      enumerate();
+      //      enumerate();
 
       // Binary representation of border_pieces
       border_pieces l_border_pieces;
