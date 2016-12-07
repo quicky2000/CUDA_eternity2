@@ -31,7 +31,6 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
   border_color_constraint l_available_pieces(true);
   octet_array l_used_pieces;
   l_used_pieces.set_octet(59,63);
-  octet_array l_min_available_transitions;
   octet_array l_solution;
   bool l_ended = false;
   do
@@ -45,7 +44,7 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
       uint64_t l_corner_mask = (0 == l_index || 15 == l_index || 30 == l_index || 45 == l_index) ? 0xF : UINT64_MAX;
       l_available_transitions & l_corner_mask;
       l_available_transitions & l_available_pieces;
-      l_available_transitions & (~(( ((uint64_t)1) << l_min_available_transitions.get_octet(l_index)) - 1));
+      l_available_transitions & (~(( ((uint64_t)1) << l_used_pieces.get_octet(l_index)) - 1));
 
       int l_ffs = l_available_transitions.ffs();
 
@@ -55,7 +54,6 @@ CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, bo
 
       // Record piece that has been selected (1 to 60)
       l_used_pieces.set_octet(l_index, l_ffs);
-      l_min_available_transitions.set_octet(l_index,l_ffs);
 
       // Remove the piece from list of available pieces if a transition was
       // possible or restablish it to prepare come back to previous state
