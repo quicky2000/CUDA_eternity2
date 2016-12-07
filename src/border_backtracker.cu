@@ -82,6 +82,7 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 			     const std::map<unsigned int, unsigned int> & p_B2C_color_count
 			     )
 {
+  gpuErrChk(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1)); // type cudaFuncCache
   unsigned int l_block_size = p_nb_thread;
   std::cout << "Nb cases : " << p_nb_cases << std::endl;
   std::cout << "Nb blocks : " << p_nb_block << std::endl;
