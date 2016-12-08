@@ -20,6 +20,7 @@
 #include "border_color_constraint.h"
 #include "border_constraint_generator.h"
 #include "octet_array.h"
+#include "nibble6_array.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -28,25 +29,25 @@
 CUDA_KERNEL(border_backtracker_kernel,
 	    const border_pieces & p_border_pieces,
 	    border_color_constraint  (&p_border_constraints)[23],
-	    octet_array * p_initial_constraint
+	    nibble6_array * p_initial_constraint
 	    )
 {
   unsigned int l_index = 0;
   border_color_constraint l_available_pieces(true);
-  octet_array l_solution;
+  nibble6_array l_solution;
   bool l_ended = false;
   do
     {
       unsigned int l_previous_index = l_index ? l_index - 1 : 59;
-      unsigned int l_piece_id = l_solution.get_octet(l_previous_index);
+      unsigned int l_piece_id = l_solution.get_nibble6(l_previous_index);
       unsigned int l_color =  l_piece_id ? p_border_pieces.get_right(l_piece_id - 1) : 0;
       border_color_constraint l_available_transitions = p_border_constraints[l_color];
-      l_available_transitions & p_border_constraints[p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_octet(l_index)];
+      l_available_transitions & p_border_constraints[p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_nibble6(l_index)];
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
       uint64_t l_corner_mask = (0 == l_index || 15 == l_index || 30 == l_index || 45 == l_index) ? 0xF : UINT64_MAX;
       l_available_transitions & l_corner_mask;
       l_available_transitions & l_available_pieces;
-      l_available_transitions & (~(( ((uint64_t)1) << l_solution.get_octet(l_index)) - 1));
+      l_available_transitions & (~(( ((uint64_t)1) << l_solution.get_nibble6(l_index)) - 1));
 
       int l_ffs = l_available_transitions.ffs();
 
@@ -56,11 +57,11 @@ CUDA_KERNEL(border_backtracker_kernel,
 
       // Remove the piece from list of available pieces if a transition was
       // possible or restablish it to prepare come back to previous state
-      unsigned int l_toggled_index = l_ffs ? l_ffs : l_solution.get_octet(l_previous_index);
+      unsigned int l_toggled_index = l_ffs ? l_ffs : l_solution.get_nibble6(l_previous_index);
       l_available_pieces.toggle_bit(l_toggled_index - 1,true);
 
       // Prepare for next pieces
-      l_solution.set_octet(l_index, l_ffs);
+      l_solution.set_nibble6(l_index, l_ffs);
       l_index = l_ffs ? l_next_index : l_previous_index;
  
     }
@@ -86,19 +87,19 @@ int launch_border_bactracker(unsigned int p_nb_cases,
   std::cout << "Nb blocks : " << p_nb_block << std::endl;
   std::cout << "Block_size : " << l_block_size << " threads" << std::endl;
   unsigned int l_nb_constraints = l_block_size * p_nb_block;
-  octet_array * l_initial_constraint = new octet_array[l_nb_constraints];
+  nibble6_array * l_initial_constraint = new nibble6_array[l_nb_constraints];
 
   std::string l_situation_string = p_initial_situation;
 
   border_constraint_generator l_generator(p_B2C_color_count);
 
   // Prepare pointers for memory allocation on GPU
-  octet_array * l_initial_constraint_ptr = nullptr;
+  nibble6_array * l_initial_constraint_ptr = nullptr;
   border_pieces * l_border_pieces_ptr = nullptr;
   border_color_constraint  (* l_border_constraints_ptr)[23] = nullptr;
 
   // Allocate pointers on GPU
-  gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, l_nb_constraints * sizeof(octet_array)));
+  gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, l_nb_constraints * sizeof(nibble6_array)));
   gpuErrChk(cudaMalloc(&l_border_pieces_ptr, sizeof(border_pieces)));
   gpuErrChk(cudaMalloc(&l_border_constraints_ptr, 23 * sizeof(border_color_constraint)));
 
@@ -118,11 +119,11 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 	  for(unsigned int l_octet = 0; l_octet < 60; ++l_octet)
 	    {
 #if 0
-	      std::cout << std::setw(2) << l_initial_constraint[l_index].get_octet(l_octet) << " " ;
+	      std::cout << std::setw(2) << l_initial_constraint[l_index].get_nibble6(l_octet) << " " ;
 #endif
-	      if(l_initial_constraint[l_index].get_octet(l_octet))
+	      if(l_initial_constraint[l_index].get_nibble6(l_octet))
 		{
-		  l_check[l_initial_constraint[l_index].get_octet(l_octet)]++;
+		  l_check[l_initial_constraint[l_index].get_nibble6(l_octet)]++;
 		}
 	    }
 #if 0
@@ -163,14 +164,14 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 			}
 		      if(l_meaningful)
 			{
-			  l_initial_constraint[l_index].set_octet(l_constraint_index, p_border_pieces.get_center(l_piece_id - 1));
+			  l_initial_constraint[l_index].set_nibble6(l_constraint_index, p_border_pieces.get_center(l_piece_id - 1));
 			}
 		    }
 		}
 	    }
 	}
 
-      gpuErrChk(cudaMemcpy(l_initial_constraint_ptr, &l_initial_constraint[0], l_nb_constraints * sizeof(octet_array), cudaMemcpyHostToDevice));
+      gpuErrChk(cudaMemcpy(l_initial_constraint_ptr, &l_initial_constraint[0], l_nb_constraints * sizeof(nibble6_array), cudaMemcpyHostToDevice));
 
       dim3 dimBlock(l_block_size,1);
       dim3 dimGrid(p_nb_block,1);
@@ -180,11 +181,11 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 		     );
 
 
-      gpuErrChk(cudaMemcpy(&l_initial_constraint[0], l_initial_constraint_ptr, l_nb_constraints * sizeof(octet_array), cudaMemcpyDeviceToHost));
+      gpuErrChk(cudaMemcpy(&l_initial_constraint[0], l_initial_constraint_ptr, l_nb_constraints * sizeof(nibble6_array), cudaMemcpyDeviceToHost));
 
       for(unsigned int l_index = 0; l_index < l_nb_constraints ; ++l_index)
 	{
-	  if(l_initial_constraint[l_index].get_octet(0))
+	  if(l_initial_constraint[l_index].get_nibble6(0))
 	    {
 	      std::string l_result;
 	      char l_orientation2string[4] = {'N', 'E', 'S', 'W'};
@@ -195,42 +196,42 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 		      std::stringstream l_stream;
 		      if(0 == l_y && 0 == l_x)
 			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(0) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(0) - 1] + 1) % 4];
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_nibble6(0) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_nibble6(0) - 1] + 1) % 4];
 			  l_result += l_stream.str();
 			}
 		      else if(0 == l_y && 15 == l_x)
 			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(15) << l_orientation2string[p_border_edges[l_initial_constraint[l_index].get_octet(15) - 1]];
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_nibble6(15) << l_orientation2string[p_border_edges[l_initial_constraint[l_index].get_nibble6(15) - 1]];
 			  l_result += l_stream.str();
 			}
 		      else if(15 == l_y && 15 == l_x)
 			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(30) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(30) - 1] + 3) % 4];
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_nibble6(30) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_nibble6(30) - 1] + 3) % 4];
 			  l_result += l_stream.str();
 			}
 		      else if(15 == l_y && 0 == l_x)
 			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(45) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(45) - 1] + 2) % 4];
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_nibble6(45) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_nibble6(45) - 1] + 2) % 4];
 			  l_result += l_stream.str();
 			}
 		      else if(0 == l_y)
 			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(l_x) << l_orientation2string[p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1]];
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_nibble6(l_x) << l_orientation2string[p_border_edges[l_initial_constraint[l_index].get_nibble6(l_x) - 1]];
 			  l_result += l_stream.str();
 			}
 		      else if(15 == l_x)
 			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(15 + l_y) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 3) % 4];
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_nibble6(15 + l_y) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_nibble6(l_x) - 1] + 3) % 4];
 			  l_result += l_stream.str();
 			}
 		      else if(15 == l_y)
 			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(30 - l_x + 15) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 2) % 4];
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_nibble6(30 - l_x + 15) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_nibble6(l_x) - 1] + 2) % 4];
 			  l_result += l_stream.str();
 			}
 		      else if(0 == l_x)
 			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(45 - l_y + 15) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 1) % 4];
+			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_nibble6(45 - l_y + 15) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_nibble6(l_x) - 1] + 1) % 4];
 			  l_result += l_stream.str();
 			}
 		      else
