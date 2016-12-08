@@ -24,6 +24,8 @@
 #include "eternity2_types.h"
 
 #include "center_color_db.h"
+#include "nibble6_array.h"
+
 #include "border_pieces.h"
 #include "border_color_constraint.h"
 #include "border_backtracker.h"
@@ -58,6 +60,22 @@ int main(int argc,char ** argv)
       unsigned int l_block_size = l_block_size_param.get_value();
       unsigned int l_nb_cases = l_nb_cases_param.get_value();
       std::string l_initial_situation = l_initial_situation_param.get_value();
+
+      nibble6_array l_nibble6_array;
+      for(unsigned int l_index = 0; l_index < 64; ++l_index)
+	{
+	  l_nibble6_array.set_nibble6(l_index,l_index);
+	  std::cout << "Nibble[" << l_index << "] = " << l_nibble6_array.get_nibble6(l_index) << std::endl ;
+	}
+      for(unsigned int l_index = 0; l_index < 64; ++l_index)
+	{
+	  std::cout << std::hex << "Collect[" << l_index << "] = 0x" << l_nibble6_array.collect(l_index) << std::dec << std::endl;
+	}
+      l_nibble6_array.set_nibble6(0,36);
+      l_nibble6_array.set_nibble6(63,36);
+      l_nibble6_array.set_nibble6(3,4);
+      std::cout << std::hex << l_nibble6_array.collect(36) << std::dec << std::endl;
+      std::cout << std::hex << l_nibble6_array.collect(4) << std::dec << std::endl;
 
       //      enumerate();
 
