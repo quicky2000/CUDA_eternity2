@@ -34,20 +34,22 @@ CUDA_KERNEL(border_backtracker_kernel,
 {
   unsigned int l_index = 0;
   border_color_constraint l_available_pieces(true);
-  nibble6_array l_solution;
+  nibble6_array l_solution(p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x]);
   bool l_ended = false;
+  unsigned int l_previous_min = 0;
   do
     {
-      unsigned int l_previous_index = l_index ? l_index - 1 : 59;
+      unsigned int l_previous_index = l_index ? l_index - 1 : 0;
       unsigned int l_piece_id = l_solution.get_nibble6(l_previous_index);
       unsigned int l_color =  l_piece_id ? p_border_pieces.get_right(l_piece_id - 1) : 0;
       border_color_constraint l_available_transitions = p_border_constraints[l_color];
-      l_available_transitions & p_border_constraints[p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_nibble6(l_index)];
+      l_available_transitions & p_border_constraints[l_solution.get_nibble6(l_index)];
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
       uint64_t l_corner_mask = (0 == l_index || 15 == l_index || 30 == l_index || 45 == l_index) ? 0xF : UINT64_MAX;
       l_available_transitions & l_corner_mask;
       l_available_transitions & l_available_pieces;
-      l_available_transitions & (~(( ((uint64_t)1) << l_solution.get_nibble6(l_index)) - 1));
+      uint64_t l_previous_mask = (~(( ((uint64_t)1) << l_previous_min) - 1)) ;
+      l_available_transitions & l_previous_mask;
 
       int l_ffs = l_available_transitions.ffs();
 
@@ -60,8 +62,13 @@ CUDA_KERNEL(border_backtracker_kernel,
       unsigned int l_toggled_index = l_ffs ? l_ffs : l_solution.get_nibble6(l_previous_index);
       l_available_pieces.toggle_bit(l_toggled_index - 1,true);
 
+      // In case of no transition we need to restore the color constraint and keep
+      l_previous_min = l_ffs ? 0 : l_solution.get_nibble6(l_previous_index);
+      unsigned int l_previous_piece_id = l_solution.get_nibble6(l_previous_index);
+      unsigned int l_previous_center_color = l_previous_piece_id ? p_border_pieces.get_center(l_previous_piece_id - 1) : 0;
+      l_solution.set_nibble6(l_ffs ? l_index : l_previous_index, l_ffs ? l_ffs : l_previous_center_color);
+
       // Prepare for next pieces
-      l_solution.set_nibble6(l_index, l_ffs);
       l_index = l_ffs ? l_next_index : l_previous_index;
  
     }
