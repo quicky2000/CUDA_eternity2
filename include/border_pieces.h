@@ -41,7 +41,7 @@ class border_pieces
   inline void set_colors(unsigned int p_border_id, uint32_t p_left_color, uint32_t p_center_color, uint32_t p_right_color);
 
   CUDA_METHOD_HD_I uint32_t get_left(unsigned int p_border_id) const;
-  inline uint32_t get_center(unsigned int p_border_id) const;
+  CUDA_METHOD_HD_I uint32_t get_center(unsigned int p_border_id) const;
   CUDA_METHOD_HD_I uint32_t get_right(unsigned int p_border_id) const;
   inline void get_colors(unsigned int p_border_id, uint32_t & p_left_color, uint32_t & p_center_color, uint32_t & p_right_color) const;
   CUDA_METHOD_HD_I void get_colors(unsigned int p_border_id, uint32_t & p_left_color, uint32_t & p_right_color) const;
