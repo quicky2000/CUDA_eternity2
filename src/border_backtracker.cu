@@ -25,7 +25,11 @@
 #include <iomanip>
 #include <string>
 
-CUDA_KERNEL(border_backtracker_kernel, const border_pieces & p_border_pieces, border_color_constraint  (&p_border_constraints)[23], octet_array * p_initial_constraint)
+CUDA_KERNEL(border_backtracker_kernel,
+	    const border_pieces & p_border_pieces,
+	    border_color_constraint  (&p_border_constraints)[23],
+	    octet_array * p_initial_constraint
+	    )
 {
   unsigned int l_index = 0;
   border_color_constraint l_available_pieces(true);
