@@ -122,14 +122,23 @@ int launch_border_bactracker(unsigned int p_nb_cases,
   octet_array * l_initial_constraint_ptr = nullptr;
   border_pieces * l_border_pieces_ptr = nullptr;
   border_color_constraint  (* l_border_constraints_ptr)[23] = nullptr;
+  nibble3_array * l_right_colors_ptr = nullptr;
+  nibble3_array * l_left_colors_ptr = nullptr;
+  nibble5_array * l_center_colors_ptr = nullptr;
 
   // Allocate pointers on GPU
   gpuErrChk(cudaMalloc(&l_initial_constraint_ptr, l_nb_constraints * sizeof(octet_array)));
   gpuErrChk(cudaMalloc(&l_border_pieces_ptr, sizeof(border_pieces)));
   gpuErrChk(cudaMalloc(&l_border_constraints_ptr, 23 * sizeof(border_color_constraint)));
+  gpuErrChk(cudaMalloc(&l_right_colors_ptr,sizeof(nibble3_array)));
+  gpuErrChk(cudaMalloc(&l_left_colors_ptr,sizeof(nibble3_array)));
+  gpuErrChk(cudaMalloc(&l_center_colors_ptr,sizeof(nibble5_array)));
 
   gpuErrChk(cudaMemcpy(l_border_pieces_ptr, &p_border_pieces, sizeof(border_pieces), cudaMemcpyHostToDevice));
   gpuErrChk(cudaMemcpy(l_border_constraints_ptr, &p_border_constraints[0], 23 * sizeof(border_color_constraint), cudaMemcpyHostToDevice));
+  gpuErrChk(cudaMemcpy(l_right_colors_ptr, &l_right_colors, sizeof(nibble3_array), cudaMemcpyHostToDevice));
+  gpuErrChk(cudaMemcpy(l_left_colors_ptr, &l_left_colors, sizeof(nibble3_array), cudaMemcpyHostToDevice));
+  gpuErrChk(cudaMemcpy(l_center_colors_ptr, &l_center_colors, sizeof(nibble5_array), cudaMemcpyHostToDevice));
 
   bool l_found = false;
   uint64_t l_fail_counter = 0;
@@ -281,6 +290,9 @@ int launch_border_bactracker(unsigned int p_nb_cases,
   gpuErrChk(cudaFree(l_initial_constraint_ptr));
   gpuErrChk(cudaFree(l_border_pieces_ptr));
   gpuErrChk(cudaFree(l_border_constraints_ptr));
+  gpuErrChk(cudaFree(l_right_colors_ptr));
+  gpuErrChk(cudaFree(l_left_colors_ptr));
+  gpuErrChk(cudaFree(l_center_colors_ptr));
 
   delete[] l_initial_constraint;
   std::cout << "Nb loop : " << l_nb_loop << std::endl;
