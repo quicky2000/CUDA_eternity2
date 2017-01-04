@@ -29,12 +29,16 @@
 #include <string>
 
 CUDA_KERNEL(border_backtracker_kernel,
-	    const border_pieces & p_border_pieces,
-	    border_color_constraint  (&p_border_constraints)[23],
+	    const nibble3_array & p_left_info,
+	    const nibble5_array & p_center_info,
+	    const nibble3_array & p_right_info,
 	    nibble6_array * p_initial_constraint
 	    )
 {
   unsigned int l_index = 0;
+  nibble3_array l_left_info = p_left_info;
+  nibble3_array l_right_info = p_right_info;
+  nibble5_array l_center_info = p_center_info;
   border_color_constraint l_available_pieces(true);
   nibble6_array l_solution(p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x]);
   bool l_ended = false;
@@ -43,9 +47,9 @@ CUDA_KERNEL(border_backtracker_kernel,
     {
       unsigned int l_previous_index = l_index ? l_index - 1 : 0;
       unsigned int l_piece_id = l_solution.get_nibble6(l_previous_index);
-      unsigned int l_color =  l_piece_id ? p_border_pieces.get_right(l_piece_id - 1) : 0;
-      border_color_constraint l_available_transitions = p_border_constraints[l_color];
-      l_available_transitions & p_border_constraints[l_solution.get_nibble6(l_index)];
+      unsigned int l_color =  l_piece_id ? l_right_info.get_nibble3(l_piece_id - 1) : 0;
+      border_color_constraint l_available_transitions = l_color ? l_left_info.collect(l_color) : UINT64_MAX;
+      l_available_transitions & l_center_info.collect(p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_octet(l_index));
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
       uint64_t l_corner_mask = (0 == l_index || 15 == l_index || 30 == l_index || 45 == l_index) ? 0xF : UINT64_MAX;
       l_available_transitions & l_corner_mask;
@@ -117,12 +121,9 @@ int launch_border_bactracker(unsigned int p_nb_cases,
       assert(p_reorganised_colors.end() != l_iter);
       l_left_colors.set_nibble3(l_index,l_iter->second);
 
+      // No need to reorganise center colors because they are coded on 32 bits and border colors
+      // and center colors are separated and never used together
       l_color = p_border_pieces.get_center(l_index);
-      l_iter = p_reorganised_colors.find(l_color);
-      if(p_reorganised_colors.end() != l_iter)
-	{
-	  l_color = l_iter->second;
-	}
       l_center_colors.set_nibble5(l_index,l_color);
     }
 
@@ -217,8 +218,12 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 
       dim3 dimBlock(l_block_size,1);
       dim3 dimGrid(p_nb_block,1);
-      launch_kernels(border_backtracker_kernel, dimGrid, dimBlock, *l_border_pieces_ptr,
-		     *l_border_constraints_ptr,
+      launch_kernels(border_backtracker_kernel,
+		     dimGrid,
+		     dimBlock,
+		     *l_left_colors_ptr,
+		     *l_center_colors_ptr,
+		     *l_right_colors_ptr,
 		     l_initial_constraint_ptr
 		     );
 
