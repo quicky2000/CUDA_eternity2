@@ -20,6 +20,8 @@
 #include "border_color_constraint.h"
 #include "border_constraint_generator.h"
 #include "octet_array.h"
+#include "nibble3_array.h"
+#include "nibble5_array.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -91,6 +93,30 @@ int launch_border_bactracker(unsigned int p_nb_cases,
   std::string l_situation_string = p_initial_situation;
 
   border_constraint_generator l_generator(p_B2C_color_count);
+
+  nibble3_array l_right_colors;
+  nibble3_array l_left_colors;
+  nibble5_array l_center_colors;
+  for(unsigned int l_index = 0;l_index < 60; ++l_index)
+    {
+      unsigned int l_color = p_border_pieces.get_right(l_index);
+      std::map<unsigned int, unsigned int>::const_iterator l_iter = p_reorganised_colors.find(l_color);
+      assert(p_reorganised_colors.end() != l_iter);
+      l_right_colors.set_nibble3(l_index,l_iter->second);
+
+      l_color = p_border_pieces.get_left(l_index);
+      l_iter = p_reorganised_colors.find(l_color);
+      assert(p_reorganised_colors.end() != l_iter);
+      l_left_colors.set_nibble3(l_index,l_iter->second);
+
+      l_color = p_border_pieces.get_center(l_index);
+      l_iter = p_reorganised_colors.find(l_color);
+      if(p_reorganised_colors.end() != l_iter)
+	{
+	  l_color = l_iter->second;
+	}
+      l_center_colors.set_nibble5(l_index,l_color);
+    }
 
   // Prepare pointers for memory allocation on GPU
   octet_array * l_initial_constraint_ptr = nullptr;
