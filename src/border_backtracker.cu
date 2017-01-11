@@ -49,8 +49,6 @@ CUDA_KERNEL(border_backtracker_kernel,
       border_color_constraint l_available_transitions = l_color ? l_left_info.collect(l_color) : UINT64_MAX;
       l_available_transitions & l_center_info.collect(p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_octet(l_index));
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
-      uint64_t l_corner_mask = (0 == l_index || 15 == l_index || 30 == l_index || 45 == l_index) ? 0xF : UINT64_MAX;
-      l_available_transitions & l_corner_mask;
       l_available_transitions & l_available_pieces;
       l_available_transitions & (~(( ((uint64_t)1) << l_solution.get_octet(l_index)) - 1));
 
