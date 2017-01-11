@@ -29,6 +29,7 @@ class border_color_constraint
 {
  public:
   CUDA_METHOD_HD_I border_color_constraint(bool p_init = false);
+  CUDA_METHOD_HD_I border_color_constraint(const uint64_t & p_value);
   CUDA_METHOD_HD_I border_color_constraint(const border_color_constraint & p_constraint);
   CUDA_METHOD_HD_I void operator&(const border_color_constraint & p_constraint);
   CUDA_METHOD_HD_I void operator&(const uint64_t & p_constraint);
@@ -50,6 +51,12 @@ class border_color_constraint
 //------------------------------------------------------------------------------
 border_color_constraint::border_color_constraint(bool p_init):
 m_constraint(p_init ? UINT64_MAX : 0x0)
+{
+}
+
+//------------------------------------------------------------------------------
+border_color_constraint::border_color_constraint(const uint64_t & p_value):
+  m_constraint(p_value)
 {
 }
 
