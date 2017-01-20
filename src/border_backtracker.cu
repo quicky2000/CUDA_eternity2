@@ -49,7 +49,7 @@ CUDA_KERNEL(border_backtracker_kernel,
       unsigned int l_piece_id = l_solution.get_nibble6(l_previous_index);
       unsigned int l_color =  l_piece_id ? l_right_info.get_nibble3(l_piece_id - 1) : 0;
       border_color_constraint l_available_transitions = l_color ? l_left_info.collect(l_color) : UINT64_MAX;
-      l_available_transitions & l_center_info.collect(p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_octet(l_index));
+      l_available_transitions & l_center_info.collect(p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x].get_nibble6(l_index));
       unsigned int l_next_index = l_index < 59 ? l_index + 1 : 0;
       l_available_transitions & l_available_pieces;
       uint64_t l_previous_mask = (~(( ((uint64_t)1) << l_previous_min) - 1)) ;
@@ -69,7 +69,7 @@ CUDA_KERNEL(border_backtracker_kernel,
       // In case of no transition we need to restore the color constraint and keep
       l_previous_min = l_ffs ? 0 : l_solution.get_nibble6(l_previous_index);
       unsigned int l_previous_piece_id = l_solution.get_nibble6(l_previous_index);
-      unsigned int l_previous_center_color = l_previous_piece_id ? p_border_pieces.get_center(l_previous_piece_id - 1) : 0;
+      unsigned int l_previous_center_color = l_previous_piece_id ? l_center_info.get_nibble5(l_previous_piece_id - 1) : 0;
       l_solution.set_nibble6(l_ffs ? l_index : l_previous_index, l_ffs ? l_ffs : l_previous_center_color);
 
       // Prepare for next pieces
