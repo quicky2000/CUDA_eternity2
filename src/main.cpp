@@ -28,6 +28,7 @@
 #include "border_color_constraint.h"
 #include "border_backtracker.h"
 #include <map>
+#include <set>
 
 int launch_cuda_code(piece (&p_pieces)[197], constraint (&p_constraints)[18][4]);
 
@@ -175,7 +176,33 @@ int main(int argc,char ** argv)
 	    }
 	}
 
-      launch_border_bactracker(l_nb_cases, l_nb_block, l_block_size, l_initial_situation, l_border_pieces, l_border_constraints, l_border_edges, l_B2C_color_count);
+      std::set<unsigned int> l_border_colors;
+      for(unsigned int l_index = 0; l_index < 60; ++l_index)
+	{
+	  l_border_colors.insert(l_border_pieces.get_left(l_index));
+	  l_border_colors.insert(l_border_pieces.get_right(l_index));
+	}
+
+      unsigned int l_unaffected_color = 1;
+      std::map<unsigned int, unsigned int> l_reorganised_colors;
+      for(auto l_iter: l_border_colors)
+	{
+	  l_reorganised_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_iter,l_unaffected_color));
+	  l_reorganised_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_unaffected_color,l_iter));
+	  std::cout << "Reorganised colors : " << l_iter << " <=> " << l_unaffected_color << std::endl ;
+	  ++l_unaffected_color;
+	}
+
+      launch_border_bactracker(l_nb_cases,
+			       l_nb_block,
+			       l_block_size,
+			       l_initial_situation,
+			       l_border_pieces,
+			       l_border_constraints,
+			       l_border_edges,
+			       l_B2C_color_count,
+			       l_reorganised_colors
+			       );
 
 #ifdef ACTIVATE_ETERNITY2_KERNEL
       launch_cuda_code(l_pieces, l_constraints);

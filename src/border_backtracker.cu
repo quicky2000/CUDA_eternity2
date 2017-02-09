@@ -76,7 +76,8 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 			     const border_pieces & p_border_pieces,
 			     border_color_constraint  (&p_border_constraints)[23],
 			     const unsigned int (&p_border_edges)[60],
-			     const std::map<unsigned int, unsigned int> & p_B2C_color_count
+			     const std::map<unsigned int, unsigned int> & p_B2C_color_count,
+			     const std::map<unsigned int, unsigned int> & p_reorganised_colors
 			     )
 {
   gpuErrChk(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1)); // type cudaFuncCache
