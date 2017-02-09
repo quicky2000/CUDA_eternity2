@@ -34,6 +34,7 @@ CUDA_KERNEL( border_backtracker_kernel
            )
 {
     unsigned int l_index = 0;
+    unsigned int l_max_index = 0;
     border_color_constraint l_available_pieces(true);
     octet_array l_solution;
     bool l_ended = false;
@@ -64,8 +65,12 @@ CUDA_KERNEL( border_backtracker_kernel
         // Prepare for next pieces
         l_solution.set_octet(l_index, l_ffs);
         l_index = l_ffs ? l_next_index : l_previous_index;
+
+        l_max_index = ( l_index > l_max_index  && !l_ended ) ? l_index : l_max_index;
     }
     while(!l_ended);
+    l_solution.set_octet(59,l_solution.get_octet(0) ? l_solution.get_octet(59) : l_max_index);
+
     p_initial_constraint[threadIdx.x + blockIdx.x * blockDim.x] = l_solution;
 }
 
@@ -168,6 +173,7 @@ int launch_border_bactracker( unsigned int p_nb_cases
             else
             {
                 ++l_fail_counter;
+                std::cout << "Max = " << l_initial_constraint[l_index].get_octet(59) << std::endl ;
             }
         }
         ++l_nb_loop;
