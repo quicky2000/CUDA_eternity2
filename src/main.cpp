@@ -23,6 +23,7 @@
 #include "constraint.h"
 #include "eternity2_types.h"
 
+#include "center_color_db.h"
 #include "border_pieces.h"
 #include "border_color_constraint.h"
 #include "border_backtracker.h"
@@ -69,8 +70,6 @@ int main(int argc,char ** argv)
       // Binary representation of center pieces. Index 0 is for empty piece
       piece l_pieces[197];
 
-      uint32_t l_center_id_to_piece_id[196];
-
       // Binary representation of constraints by colors
       // Color 0 represent no pieces
       constraint l_constraints[18][4];
@@ -79,61 +78,10 @@ int main(int argc,char ** argv)
 	  l_constraints[0][l_index].fill(true);
 	}
 
-      unsigned int l_color_id_to_center_color_id[23] =
-	{
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256,
-	  256
-	};
-
-      unsigned int l_center_color_id_to_color_id[18] =
-	{
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128,
-	  128
-	};
-
       // Count number of occurences for each border2center color
       std::map<unsigned int, unsigned int> l_B2C_color_count;
 
-      // Compute pieces bitfield representation
-      unsigned int l_center_piece_index = 1;
-      unsigned int l_center_color_index = 1;
+      center_color_db l_center_color_db;
 
       unsigned int l_border_edges[60];
 #include "eternity2_pieces.h"
@@ -148,21 +96,19 @@ int main(int argc,char ** argv)
 	  unsigned int l_piece_id = l_all_pieces[l_all_pieces_index][0];
 	  switch(l_border_edge_count)
 	    {
+	      // Center Piece
 	    case 0:
 	      {
 		assert(60 < l_piece_id);
+		// Keep memory of global piece id
+		unsigned int l_center_piece_index = l_center_color_db.register_piece_id(l_piece_id);
 		for(unsigned int l_orientation_index = (unsigned int)t_orientation::NORTH; l_orientation_index <= (unsigned int)t_orientation::WEST; ++l_orientation_index)
 		  {
 		    unsigned int l_color_id = l_all_pieces[l_all_pieces_index][1 + l_orientation_index];
 
-		    // Compute center_color_id if not already done
-		    if(256 == l_color_id_to_center_color_id[l_color_id])
-		      {
-			l_color_id_to_center_color_id[l_color_id] = l_center_color_index;
-			l_center_color_id_to_color_id[l_center_color_index] = l_color_id;
-			++l_center_color_index;
-		      }
-		    unsigned int l_center_color_id = l_color_id_to_center_color_id[l_color_id];
+		    // Compute center_color_id
+		    unsigned int l_center_color_id = l_center_color_db.register_color_id(l_color_id);
+
 		    // Store bitfield representation
 		    l_pieces[l_center_piece_index].set_color(l_center_color_id, l_orientation_index);
 
@@ -170,12 +116,9 @@ int main(int argc,char ** argv)
 		    l_constraints[l_center_color_id][l_orientation_index].set_bit(l_center_piece_index - 1);
 		  }
 
-		// Keep memory of global piece id
-		l_center_id_to_piece_id[l_center_piece_index] = l_piece_id;
-
-		++l_center_piece_index;
 	      }
 	      break;
+	      // Border piece
 	    case 1:
 	      {
 		assert(l_piece_id <= 60 && l_piece_id > 4);
@@ -203,6 +146,7 @@ int main(int argc,char ** argv)
 		  }
 	      }
 	      break;
+	      // Corner piece
 	    case 2:
 	      {
 		assert(l_piece_id < 5);
