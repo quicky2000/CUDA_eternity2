@@ -16,6 +16,7 @@
       along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #include "my_cuda.h"
+#include "border_backtracker.h"
 #include "border_pieces.h"
 #include "border_color_constraint.h"
 #include "border_constraint_generator.h"
@@ -129,44 +130,12 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 	  std::cout << std::endl ;
 #endif
 	  assert(l_check == p_B2C_color_count);
-
 	  if("" != l_situation_string)
 	    {
-	      assert(256 * 4 == l_situation_string.size());
-	      for(unsigned int l_situation_index = 0 ; l_situation_index < 256 ; ++l_situation_index)
-		{
-		  std::string l_piece_id_str = l_situation_string.substr(l_situation_index * 4,3);
-		  if("---" != l_piece_id_str)
-		    {
-		      unsigned int l_piece_id = std::stoi(l_piece_id_str);
-		      unsigned int l_constraint_index= 0;
-		      bool l_meaningful = true;
-		      if(l_situation_index < 16)
-			{
-			  l_constraint_index = l_situation_index;
-			}
-		      else if(15 == l_situation_index % 16)
-			{
-			  l_constraint_index = 15 + (l_situation_index / 16);
-			}
-		      else if(15 == l_situation_index / 16)
-			{
-			  l_constraint_index = 255 - l_situation_index + 30;
-			}
-		      else if(0 == l_situation_index % 16)
-			{
-			  l_constraint_index = 45 - (l_situation_index / 16 ) + 15;
-			}
-		      else
-			{
-			  l_meaningful = false;
-			}
-		      if(l_meaningful)
-			{
-			  l_initial_constraint[l_index].set_octet(l_constraint_index, p_border_pieces.get_center(l_piece_id - 1));
-			}
-		    }
-		}
+	      extract_initial_constraint(l_situation_string,
+					 l_initial_constraint[l_index],
+					 p_border_pieces
+					 );
 	    }
 	}
 
@@ -261,4 +230,51 @@ int launch_border_bactracker(unsigned int p_nb_cases,
   std::cout << l_fail_counter << " fails" << std::endl;
   return EXIT_SUCCESS;
 }
+
+//------------------------------------------------------------------------------
+void extract_initial_constraint(const std::string & p_situation_string,
+				octet_array & p_initial_constraint,
+				const border_pieces & p_border_pieces
+				)
+{
+  assert(256 * 4 == p_situation_string.size());
+  for(unsigned int l_situation_index = 0 ;
+      l_situation_index < 256 ;
+      ++l_situation_index
+      )
+    {
+      std::string l_piece_id_str = p_situation_string.substr(l_situation_index * 4,3);
+      if("---" != l_piece_id_str)
+	{
+	  unsigned int l_piece_id = std::stoi(l_piece_id_str);
+	  unsigned int l_constraint_index= 0;
+	  bool l_meaningful = true;
+	  if(l_situation_index < 16)
+	    {
+	      l_constraint_index = l_situation_index;
+	    }
+	  else if(15 == l_situation_index % 16)
+	    {
+	      l_constraint_index = 15 + (l_situation_index / 16);
+	    }
+	  else if(15 == l_situation_index / 16)
+	    {
+	      l_constraint_index = 255 - l_situation_index + 30;
+	    }
+	  else if(0 == l_situation_index % 16)
+	    {
+	      l_constraint_index = 45 - (l_situation_index / 16 ) + 15;
+	    }
+	  else
+	    {
+	      l_meaningful = false;
+	    }
+	  if(l_meaningful)
+	    {
+	      p_initial_constraint.set_octet(l_constraint_index, p_border_pieces.get_center(l_piece_id - 1));
+	    }
+	}
+    }
+}
+
 // EOF

@@ -21,6 +21,7 @@
 
 class border_pieces;
 class border_color_constraint;
+class octet_array;
 
 int launch_border_bactracker(unsigned int p_nb_cases,
 			     unsigned int p_nb_block,
@@ -33,5 +34,9 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 			     const std::map<unsigned int, unsigned int> & p_reorganised_colors
 			     );
 
+void extract_initial_constraint(const std::string & p_situation_string,
+				octet_array & p_initial_constraint,
+				const border_pieces & p_border_pieces
+				);
 #endif // _BORDER_BACK_TRACKER_H_
 // EOF
