@@ -193,6 +193,16 @@ int main(int argc,char ** argv)
 	  ++l_unaffected_B_color;
 	}
 
+      unsigned int l_unaffected_B2C_color = 1;
+      std::map<unsigned int, unsigned int> l_reorganised_B2C_colors;
+      for(auto l_iter: l_B2C_color_count)
+	{
+	  l_reorganised_B2C_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_iter.first,l_unaffected_B2C_color));
+	  l_reorganised_B2C_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_unaffected_B2C_color,l_iter.first));
+	  std::cout << "Reorganised border2center colors : " << l_iter.first << " <=> " << l_unaffected_B2C_color << std::endl ;
+	  ++l_unaffected_B2C_color;
+	}
+
       launch_border_bactracker(l_nb_cases,
 			       l_nb_block,
 			       l_block_size,
