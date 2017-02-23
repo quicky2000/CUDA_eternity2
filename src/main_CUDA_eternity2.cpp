@@ -27,6 +27,7 @@
 #include "border_pieces.h"
 #include "border_color_constraint.h"
 #include "border_backtracker.h"
+#include "border_exploration.h"
 #include <map>
 #include <set>
 
@@ -203,11 +204,19 @@ int main(int argc,char ** argv)
 
             unsigned int l_unaffected_B2C_color = 1;
             std::map<unsigned int, unsigned int> l_reorganised_B2C_colors;
+            std::map<unsigned int, unsigned int> l_reorganised_all_colors;
             for (auto l_iter: l_B2C_color_count)
             {
                 l_reorganised_B2C_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_iter.first, l_unaffected_B2C_color));
-                l_reorganised_B2C_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_unaffected_B2C_color, l_iter.first));
+                l_reorganised_all_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_iter.first,l_unaffected_B2C_color));
                 std::cout << "Reorganised border2center colors : " << l_iter.first << " <=> " << l_unaffected_B2C_color << std::endl;
+                ++l_unaffected_B2C_color;
+            }
+
+            for(auto l_iter: l_border_colors)
+            {
+                l_reorganised_all_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_iter,l_unaffected_B2C_color));
+                std::cout << "Reorganised all colors : " << l_iter << " <=> " << l_unaffected_B2C_color << std::endl ;
                 ++l_unaffected_B2C_color;
             }
 
@@ -223,6 +232,16 @@ int main(int argc,char ** argv)
                                         , l_B2C_color_count
                                         , l_reorganised_B_colors
                                         );
+            }
+            else if("border_exploration" == l_feature)
+            {
+                border_exploration l_border_explorer( l_B2C_color_count
+                                                    , l_reorganised_all_colors
+                                                    , l_border_constraints
+                                                    , l_border_pieces
+                                                    , l_initial_situation
+                                                    );
+                l_border_explorer.run();
             }
 #ifdef ACTIVATE_ETERNITY2_KERNEL
             else if("old_cuda" == l_feature)

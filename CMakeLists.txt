@@ -11,6 +11,7 @@ set(MY_SOURCE_FILES
     include/situation_orientation.h
     include/constraint.h
     include/border_pieces.h
+    include/border_exploration.h
     include/nibble6_array.h
     include/piece.h
     include/border_backtracker.h
@@ -25,6 +26,7 @@ set(MY_SOURCE_FILES
     include/nibble3_array.h
     include/border_constraint_generator.h
     src/border_backtracker.cu
+    src/border_exploration.cu
     src/eternity2.cu
    )
 
