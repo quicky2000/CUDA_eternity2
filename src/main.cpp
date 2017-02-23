@@ -183,14 +183,14 @@ int main(int argc,char ** argv)
 	  l_border_colors.insert(l_border_pieces.get_right(l_index));
 	}
 
-      unsigned int l_unaffected_color = 1;
-      std::map<unsigned int, unsigned int> l_reorganised_colors;
+      unsigned int l_unaffected_B_color = 1;
+      std::map<unsigned int, unsigned int> l_reorganised_B_colors;
       for(auto l_iter: l_border_colors)
 	{
-	  l_reorganised_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_iter,l_unaffected_color));
-	  l_reorganised_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_unaffected_color,l_iter));
-	  std::cout << "Reorganised colors : " << l_iter << " <=> " << l_unaffected_color << std::endl ;
-	  ++l_unaffected_color;
+	  l_reorganised_B_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_iter,l_unaffected_B_color));
+	  l_reorganised_B_colors.insert(std::map<unsigned int, unsigned int>::value_type(l_unaffected_B_color,l_iter));
+	  std::cout << "Reorganised border colors : " << l_iter << " <=> " << l_unaffected_B_color << std::endl ;
+	  ++l_unaffected_B_color;
 	}
 
       launch_border_bactracker(l_nb_cases,
@@ -201,7 +201,7 @@ int main(int argc,char ** argv)
 			       l_border_constraints,
 			       l_border_edges,
 			       l_B2C_color_count,
-			       l_reorganised_colors
+			       l_reorganised_B_colors
 			       );
 
 #ifdef ACTIVATE_ETERNITY2_KERNEL
