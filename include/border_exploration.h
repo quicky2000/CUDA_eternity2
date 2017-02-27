@@ -40,7 +40,7 @@ class border_exploration
                        const std::string & p_situation_string
                        );
     inline ~border_exploration(void);
-    void run(void);
+    void run(const unsigned int (&p_border_edges)[60]);
  private:
   border_color_constraint  m_border_constraints[23];
   border_pieces m_border_pieces;

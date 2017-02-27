@@ -126,7 +126,7 @@ border_exploration::border_exploration(const std::map<unsigned int, unsigned int
 }
 
 //-----------------------------------------------------------------------------
-void border_exploration::run(void)
+void border_exploration::run(const unsigned int (&p_border_edges)[60])
 {
     uint64_t l_nb_solution = 0;
     bool l_continu = true;
@@ -176,6 +176,14 @@ void border_exploration::run(void)
                 ++l_nb_solution;
                 std::cout << "[" << l_nb_solution << "] : ";
                 m_enumerator->display_word();
+#ifdef DISPLAY_SITUATION_STRING
+	      std::string l_situation_string;
+	      constraint_to_string(l_situation_string,
+				   l_initial_constraint,
+				   p_border_edges
+				   );
+	      std::cout << l_situation_string << std::endl;
+#endif // DISPLAY_SITUATION_STRING
                 for(unsigned int l_index = 0;
                     l_index < 60;
                     ++l_index

@@ -241,7 +241,7 @@ int main(int argc,char ** argv)
                                                     , l_border_pieces
                                                     , l_initial_situation
                                                     );
-                l_border_explorer.run();
+                l_border_explorer.run(l_border_edges);
             }
 #ifdef ACTIVATE_ETERNITY2_KERNEL
             else if("old_cuda" == l_feature)
