@@ -26,6 +26,7 @@
 #include <iomanip>
 #include <string>
 
+//------------------------------------------------------------------------------
 CUDA_KERNEL(border_backtracker_kernel,
 	    const border_pieces & p_border_pieces,
 	    border_color_constraint  (&p_border_constraints)[23],
@@ -156,59 +157,10 @@ int launch_border_bactracker(unsigned int p_nb_cases,
 	  if(l_initial_constraint[l_index].get_octet(0))
 	    {
 	      std::string l_result;
-	      char l_orientation2string[4] = {'N', 'E', 'S', 'W'};
-	      for(unsigned int l_y = 0; l_y < 16; ++l_y)
-		{
-		  for(unsigned int l_x = 0; l_x < 16; ++l_x)
-		    {
-		      std::stringstream l_stream;
-		      if(0 == l_y && 0 == l_x)
-			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(0) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(0) - 1] + 1) % 4];
-			  l_result += l_stream.str();
-			}
-		      else if(0 == l_y && 15 == l_x)
-			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(15) << l_orientation2string[p_border_edges[l_initial_constraint[l_index].get_octet(15) - 1]];
-			  l_result += l_stream.str();
-			}
-		      else if(15 == l_y && 15 == l_x)
-			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(30) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(30) - 1] + 3) % 4];
-			  l_result += l_stream.str();
-			}
-		      else if(15 == l_y && 0 == l_x)
-			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(45) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(45) - 1] + 2) % 4];
-			  l_result += l_stream.str();
-			}
-		      else if(0 == l_y)
-			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(l_x) << l_orientation2string[p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1]];
-			  l_result += l_stream.str();
-			}
-		      else if(15 == l_x)
-			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(15 + l_y) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 3) % 4];
-			  l_result += l_stream.str();
-			}
-		      else if(15 == l_y)
-			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(30 - l_x + 15) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 2) % 4];
-			  l_result += l_stream.str();
-			}
-		      else if(0 == l_x)
-			{
-			  l_stream << std::setw(3) << l_initial_constraint[l_index].get_octet(45 - l_y + 15) << l_orientation2string[(p_border_edges[l_initial_constraint[l_index].get_octet(l_x) - 1] + 1) % 4];
-			  l_result += l_stream.str();
-			}
-		      else
-			{
-			  l_result += "----";
-			}
-		    }
-		  //  l_result += "\n";
-		}
+	      constraint_to_string(l_result,
+				   l_initial_constraint[l_index],
+				   p_border_edges
+				   );
 	      std::cout << "\"" << l_result << "\"" << std::endl ;
 	      l_found = true;
 	    }
@@ -277,4 +229,70 @@ void extract_initial_constraint(const std::string & p_situation_string,
     }
 }
 
+//------------------------------------------------------------------------------
+void constraint_to_string(std::string & p_result,
+			  const octet_array & p_situation,
+			  const unsigned int (&p_border_edges)[60]
+			  )
+{
+  p_result = "";
+  char l_orientation2string[4] = {'N', 'E', 'S', 'W'};
+  for(unsigned int l_y = 0;
+      l_y < 16;
+      ++l_y
+      )
+    {
+      for(unsigned int l_x = 0;
+	  l_x < 16;
+	  ++l_x
+	  )
+	{
+	  std::stringstream l_stream;
+	  if(0 == l_y && 0 == l_x)
+	    {
+	      l_stream << std::setw(3) << p_situation.get_octet(0) << l_orientation2string[(p_border_edges[p_situation.get_octet(0) - 1] + 1) % 4];
+	      p_result += l_stream.str();
+	    }
+	  else if(0 == l_y && 15 == l_x)
+	    {
+	      l_stream << std::setw(3) << p_situation.get_octet(15) << l_orientation2string[p_border_edges[p_situation.get_octet(15) - 1]];
+	      p_result += l_stream.str();
+	    }
+	  else if(15 == l_y && 15 == l_x)
+	    {
+	      l_stream << std::setw(3) << p_situation.get_octet(30) << l_orientation2string[(p_border_edges[p_situation.get_octet(30) - 1] + 3) % 4];
+	      p_result += l_stream.str();
+	    }
+	  else if(15 == l_y && 0 == l_x)
+	    {
+	      l_stream << std::setw(3) << p_situation.get_octet(45) << l_orientation2string[(p_border_edges[p_situation.get_octet(45) - 1] + 2) % 4];
+	      p_result += l_stream.str();
+	    }
+	  else if(0 == l_y)
+	    {
+	      l_stream << std::setw(3) << p_situation.get_octet(l_x) << l_orientation2string[p_border_edges[p_situation.get_octet(l_x) - 1]];
+	      p_result += l_stream.str();
+	    }
+	  else if(15 == l_x)
+	    {
+	      l_stream << std::setw(3) << p_situation.get_octet(15 + l_y) << l_orientation2string[(p_border_edges[p_situation.get_octet(l_x) - 1] + 3) % 4];
+	      p_result += l_stream.str();
+	    }
+	  else if(15 == l_y)
+	    {
+	      l_stream << std::setw(3) << p_situation.get_octet(30 - l_x + 15) << l_orientation2string[(p_border_edges[p_situation.get_octet(l_x) - 1] + 2) % 4];
+	      p_result += l_stream.str();
+	    }
+	  else if(0 == l_x)
+	    {
+	      l_stream << std::setw(3) << p_situation.get_octet(45 - l_y + 15) << l_orientation2string[(p_border_edges[p_situation.get_octet(l_x) - 1] + 1) % 4];
+	      p_result += l_stream.str();
+	    }
+	  else
+	    {
+	      p_result += "----";
+	    }
+	}
+    }
+}
 // EOF

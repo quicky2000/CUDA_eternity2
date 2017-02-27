@@ -38,5 +38,10 @@ void extract_initial_constraint(const std::string & p_situation_string,
 				octet_array & p_initial_constraint,
 				const border_pieces & p_border_pieces
 				);
+
+void constraint_to_string(std::string & p_result,
+			  const octet_array & p_situation,
+			  const unsigned int (&p_border_edges)[60]
+			  );
 #endif // _BORDER_BACK_TRACKER_H_
 // EOF
