@@ -133,6 +133,10 @@ void border_exploration::run(const unsigned int (&p_border_edges)[60])
     octet_array l_initial_constraint;
     dim3 dimBlock(1,1);
     dim3 dimGrid(1,1);
+
+    std::atomic<bool> l_display_solution(false);
+    std::atomic<bool> l_stop_thread(false);
+    std::thread l_periodic_thread(periodic_display,std::ref(l_stop_thread),std::ref(l_display_solution));
     if(m_enumerator->get_word_size() != 56)
     {
         throw quicky_exception::quicky_logic_exception("Algorithm hardcoded for Eternity2 !", __LINE__, __FILE__);
@@ -174,20 +178,18 @@ void border_exploration::run(const unsigned int (&p_border_edges)[60])
             {
                 //	      std::cout << "==> Corner = " << l_initial_constraint.get_octet(0) << std::endl ;
                 ++l_nb_solution;
-                std::cout << "[" << l_nb_solution << "] : ";
-                m_enumerator->display_word();
+                if(l_display_solution)
+                {
+                    std::cout << "[" << l_nb_solution << "] : ";
+                    m_enumerator->display_word();
 #ifdef DISPLAY_SITUATION_STRING
-	      std::string l_situation_string;
-	      constraint_to_string(l_situation_string,
-				   l_initial_constraint,
-				   p_border_edges
-				   );
-	      std::cout << l_situation_string << std::endl;
+                    std::string l_situation_string;
+                    constraint_to_string(l_situation_string, l_initial_constraint, p_border_edges);
+                    std::cout << l_situation_string << std::endl;
 #endif // DISPLAY_SITUATION_STRING
-                for(unsigned int l_index = 0;
-                    l_index < 60;
-                    ++l_index
-                        )
+                    l_display_solution = false;
+                }
+                for(unsigned int l_index = 0; l_index < 60; ++l_index)
                 {
                     l_initial_constraint.set_octet(l_index,0);
                 }
@@ -195,5 +197,8 @@ void border_exploration::run(const unsigned int (&p_border_edges)[60])
         }
     }
     m_enumerator->display_word();
+    // Stop periodic thread
+    l_stop_thread = true;
+    l_periodic_thread.join();
 }
 //EOF

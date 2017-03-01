@@ -23,6 +23,10 @@
 #include "border_backtracker.h"
 #include "border_pieces.h"
 #include <map>
+#include <atomic>
+#include <thread>
+#include <chrono>
+#include <unistd.h>
 
 extern CUDA_KERNEL(border_backtracker_kernel,
 		   const border_pieces & p_border_pieces,
@@ -42,6 +46,10 @@ class border_exploration
     inline ~border_exploration(void);
     void run(const unsigned int (&p_border_edges)[60]);
  private:
+  inline static void periodic_display(const std::atomic<bool> & p_stop,
+				      std::atomic<bool> & p_display
+				      );
+
   border_color_constraint  m_border_constraints[23];
   border_pieces m_border_pieces;
   combinatorics::enumerator * m_enumerator;
@@ -56,5 +64,21 @@ border_exploration::~border_exploration(void)
   delete m_reference_word;
 }
 
+//------------------------------------------------------------------------------
+void border_exploration::periodic_display(const std::atomic<bool> & p_stop,
+					  std::atomic<bool> & p_display
+					  )
+{
+  std::cout << "Launching thread" << std::endl;
+  while(!static_cast<bool>(p_stop))
+    {
+      std::this_thread::sleep_for(std::chrono::minutes(10));
+      p_display = true;
+      while(p_display)
+	{
+	  usleep(1);
+	}
+    }
+}
 #endif // _BORDER_EXPLORATION_H_
 // EOF
