@@ -21,6 +21,8 @@
 #include "my_cuda.h"
 #include <cinttypes>
 #include <cassert>
+#include <iomanip>
+#include <iostream>
 
 /**
    Binary representation of pieces placed on eternity border including corners
@@ -37,6 +39,9 @@
  **/
 class border_pieces
 {
+    friend inline std::ostream & operator<<( std::ostream & p_stream
+                                           , const border_pieces & p_db
+                                           );
   public:
     inline
     border_pieces();
@@ -146,5 +151,16 @@ uint32_t border_pieces::get_right(unsigned int p_border_id) const
     return (m_pieces[p_border_id >> 1] >> (16 * (p_border_id & 0x1))) & 0x1F;
 }
 
+//------------------------------------------------------------------------------
+std::ostream & operator<<( std::ostream & p_stream
+                         , const border_pieces & p_db
+                         )
+{
+    for(unsigned int l_index = 0; l_index < 30; ++l_index)
+    {
+        p_stream << "pieces[" << l_index << "] = 0x" << std::hex << p_db.m_pieces[l_index] << std::dec << std::endl;
+    }
+    return p_stream;
+}
 #endif // _BORDER_PIECES_
 // EOF

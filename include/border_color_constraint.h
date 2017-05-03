@@ -21,12 +21,17 @@
 #include "my_cuda.h"
 #include <cinttypes>
 #include <cstring>
+#include <iostream>
+#include <iomanip>
 
 /**
    Class representing corner and border pieces matching a color constraint
  */
 class border_color_constraint
 {
+    friend inline std::ostream & operator<<( std::ostream & p_stream
+                                           , const border_color_constraint & p_constraint
+                                           );
   public:
     CUDA_METHOD_HD_I border_color_constraint(bool p_init = false);
     CUDA_METHOD_HD_I border_color_constraint(const border_color_constraint & p_constraint);
@@ -119,5 +124,13 @@ int border_color_constraint::ffs(void) const
 #endif
 }
 
+//------------------------------------------------------------------------------
+std::ostream & operator<<( std::ostream & p_stream
+                         , const border_color_constraint & p_constraint
+                         )
+{
+    p_stream << "0x" << std::hex << p_constraint.m_constraint << std::dec ;
+    return p_stream;
+}
 #endif // _BORDER_COLOR_CONSTRAINT_H_
 // EOF
