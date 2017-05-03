@@ -83,9 +83,13 @@ border_exploration::border_exploration(const std::map<unsigned int, unsigned int
         std::map<unsigned int, unsigned int>::const_iterator l_iter = p_reorganised_colors.find(l_left_color);
         assert(p_reorganised_colors.end() != l_iter);
         l_left_color = l_iter->second;
-        l_iter = p_reorganised_colors.find(l_center_color);
-        assert(p_reorganised_colors.end() != l_iter);
-        l_center_color = l_iter->second;
+        // Check for reorganised colors only in case of border pieces ie center_color != 0
+        if(l_center_color)
+        {
+            l_iter = p_reorganised_colors.find(l_center_color);
+            assert(p_reorganised_colors.end() != l_iter);
+            l_center_color = l_iter->second;
+        }
         l_iter = p_reorganised_colors.find(l_right_color);
         assert(p_reorganised_colors.end() != l_iter);
         l_right_color = l_iter->second;

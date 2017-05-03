@@ -56,7 +56,6 @@ class border_exploration
   unsigned int * m_reference_word;
 };
 
-
 //-----------------------------------------------------------------------------
 border_exploration::~border_exploration(void)
 {
