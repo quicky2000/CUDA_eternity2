@@ -2,7 +2,7 @@
 # Summary 
 The aim of this project is the exploration of edge matching puzzle Eternity using CUDA technology
 
-Code is designed to run on a Geforce 610 GT
+Code is designed to run on a Geforce Tesla T4
 
 More information can be found on : https://www.logre.eu/wiki/Projet_EMP_E2
 
