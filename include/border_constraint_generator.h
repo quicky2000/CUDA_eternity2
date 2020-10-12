@@ -25,14 +25,16 @@
 
 class border_constraint_generator
 {
- public:
-  inline border_constraint_generator(const std::map<unsigned int, unsigned int> & p_B2C_color_count);
-  inline void generate(octet_array & p_constraint);
- private:
-  std::array<unsigned int,56> m_array;
-  std::random_device m_random_device;
-  std::seed_seq m_seed2;
-  std::mt19937 m_random_engine;
+  public:
+    inline border_constraint_generator(const std::map<unsigned int, unsigned int> & p_B2C_color_count);
+    inline void generate(octet_array & p_constraint);
+
+  private:
+
+    std::array<unsigned int,56> m_array;
+    std::random_device m_random_device;
+    std::seed_seq m_seed2;
+    std::mt19937 m_random_engine;
 };
 
 //------------------------------------------------------------------------------
@@ -44,39 +46,39 @@ border_constraint_generator::border_constraint_generator(const std::map<unsigned
 #endif // DETERMINISTIC_SEED
   m_random_engine(m_seed2)
 {
-  unsigned int l_total = 0;
-  unsigned int l_index = 0;
-  for(auto l_iter:p_B2C_color_count)
+    unsigned int l_total = 0;
+    unsigned int l_index = 0;
+    for(auto l_iter:p_B2C_color_count)
     {
-      l_total += l_iter.second;
-      for(unsigned int l_count = 0; l_count < l_iter.second; ++l_count, ++l_index)
-	{
-	  m_array[l_index] = l_iter.first;
-	}
+        l_total += l_iter.second;
+        for(unsigned int l_count = 0; l_count < l_iter.second; ++l_count, ++l_index)
+        {
+            m_array[l_index] = l_iter.first;
+        }
     }
-  assert(l_total == m_array.size());
+    assert(l_total == m_array.size());
 }
 
 //------------------------------------------------------------------------------
 void border_constraint_generator::generate(octet_array & p_constraint)
 {
-  unsigned int l_output_index = 1;
-  p_constraint.set_octet(0,0);
-  // Be carreful l_output_index is related to an array of size 60 whereas m_array is size 56
-  for(unsigned int l_index = 0; l_index < 55; ++l_index, ++l_output_index)
+    unsigned int l_output_index = 1;
+    p_constraint.set_octet(0,0);
+    // Be carreful l_output_index is related to an array of size 60 whereas m_array is size 56
+    for(unsigned int l_index = 0; l_index < 55; ++l_index, ++l_output_index)
     {
-      if(15 == l_output_index || 30 == l_output_index || 45 == l_output_index)
-	{
-	  p_constraint.set_octet(l_output_index,0);
-	  ++l_output_index;
-	}
-      std::uniform_int_distribution<int> l_uniform_dist(0,55 - l_index);
-      int l_rand = l_uniform_dist(m_random_engine);
-      p_constraint.set_octet(l_output_index, m_array[l_rand]);
-      std::swap(m_array[l_rand], m_array[55 - l_index]);
+        if(15 == l_output_index || 30 == l_output_index || 45 == l_output_index)
+        {
+            p_constraint.set_octet(l_output_index,0);
+            ++l_output_index;
+        }
+        std::uniform_int_distribution<int> l_uniform_dist(0,55 - l_index);
+        int l_rand = l_uniform_dist(m_random_engine);
+        p_constraint.set_octet(l_output_index, m_array[l_rand]);
+        std::swap(m_array[l_rand], m_array[55 - l_index]);
     }
-  // For latest we no more have choice
-  p_constraint.set_octet(59,m_array[0]);
+    // For latest we no more have choice
+    p_constraint.set_octet(59,m_array[0]);
 }
 
 #endif // _BORDER_CONSTRAINT_GENERATOR_H_

@@ -30,33 +30,37 @@
  */
 class octet_array
 {
- public:
-  CUDA_METHOD_HD_I octet_array(void);
-  CUDA_METHOD_HD_I void set_octet(unsigned int p_index, uint32_t p_color_id);
-  CUDA_METHOD_HD_I uint32_t get_octet(unsigned int p_index) const;
- private:
-  uint32_t m_octets[15];
+  public:
+    CUDA_METHOD_HD_I octet_array();
+    CUDA_METHOD_HD_I void set_octet( unsigned int p_index
+                                   , uint32_t p_color_id
+                                   );
+    CUDA_METHOD_HD_I uint32_t get_octet(unsigned int p_index) const;
+  private:
+    uint32_t m_octets[15];
 };
 
 //------------------------------------------------------------------------------
-octet_array::octet_array(void):
-m_octets{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+octet_array::octet_array()
+: m_octets{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 {
 }
 
 //------------------------------------------------------------------------------
-void octet_array::set_octet(unsigned int p_index, uint32_t p_color_id)
+void octet_array::set_octet( unsigned int p_index
+                           , uint32_t p_color_id
+                           )
 {
-  assert(p_index < 60);
-  m_octets[p_index >> 2] &= ~(((uint32_t)0xFF) << (8 * (p_index & 0x3)));
-  m_octets[p_index >> 2] |= p_color_id << (8 * (p_index & 0x3));
+    assert(p_index < 60);
+    m_octets[p_index >> 2] &= ~(((uint32_t)0xFF) << (8 * (p_index & 0x3)));
+    m_octets[p_index >> 2] |= p_color_id << (8 * (p_index & 0x3));
 }
 
 //------------------------------------------------------------------------------
 uint32_t octet_array::get_octet(unsigned int p_index) const
 {
-  assert(p_index < 60);
-  return ((m_octets[p_index >> 2]) >> (8 * (p_index & 0x3))) & 0xFF;
+    assert(p_index < 60);
+    return ((m_octets[p_index >> 2]) >> (8 * (p_index & 0x3))) & 0xFF;
 }
 
 #endif // _OCTET_ARRAY_H_

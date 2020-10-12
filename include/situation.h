@@ -18,33 +18,31 @@
 #ifndef _SITUATION_H_
 #define _SITUATION_H_
 
-#include "situation.h"
 #include <cinttypes>
 
 class situation
 {
-public:
-  situation(void) = default;
-  CUDA_METHOD_HD_I situation(const situation & p_situation);
-  CUDA_METHOD_HD_I void operator=(const situation & p_situation);
+  public:
+    situation(void) = default;
+    CUDA_METHOD_HD_I situation(const situation & p_situation);
+    CUDA_METHOD_HD_I void operator=(const situation & p_situation);
 
-  situation_orientation m_orientations;
-  uint8_t m_piece_ids[256];
-}
-;
+    situation_orientation m_orientations;
+    uint8_t m_piece_ids[256];
+};
 
 //------------------------------------------------------------------------------
 situation::situation(const situation & p_situation)
 {
-  memcpy(&m_orientations, &p_situation.m_orientations, sizeof(m_orientations));
-  memcpy(&m_piece_ids, &p_situation.m_piece_ids, sizeof(m_piece_ids));
+    memcpy(&m_orientations, &p_situation.m_orientations, sizeof(m_orientations));
+    memcpy(&m_piece_ids, &p_situation.m_piece_ids, sizeof(m_piece_ids));
 }
 
 //------------------------------------------------------------------------------
 void situation::operator=(const situation & p_situation)
 {
-  memcpy(&m_orientations, &p_situation.m_orientations, sizeof(m_orientations));
-  memcpy(&m_piece_ids, &p_situation.m_piece_ids, sizeof(m_piece_ids));
+    memcpy(&m_orientations, &p_situation.m_orientations, sizeof(m_orientations));
+    memcpy(&m_piece_ids, &p_situation.m_piece_ids, sizeof(m_piece_ids));
 }
 
 #endif // _SITUATION_H_

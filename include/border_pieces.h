@@ -37,77 +37,100 @@
  **/
 class border_pieces
 {
- public:
-  inline void set_colors(unsigned int p_border_id, uint32_t p_left_color, uint32_t p_center_color, uint32_t p_right_color);
+  public:
+    inline void set_colors( unsigned int p_border_id
+                          , uint32_t p_left_color
+                          , uint32_t p_center_color
+                          , uint32_t p_right_color
+                          );
 
-  CUDA_METHOD_HD_I uint32_t get_left(unsigned int p_border_id) const;
-  CUDA_METHOD_HD_I uint32_t get_center(unsigned int p_border_id) const;
-  CUDA_METHOD_HD_I uint32_t get_right(unsigned int p_border_id) const;
-  inline void get_colors(unsigned int p_border_id, uint32_t & p_left_color, uint32_t & p_center_color, uint32_t & p_right_color) const;
-  CUDA_METHOD_HD_I void get_colors(unsigned int p_border_id, uint32_t & p_left_color, uint32_t & p_right_color) const;
- private:
-  /**
+    CUDA_METHOD_HD_I uint32_t get_left(unsigned int p_border_id) const;
+    CUDA_METHOD_HD_I uint32_t get_center(unsigned int p_border_id) const;
+    CUDA_METHOD_HD_I uint32_t get_right(unsigned int p_border_id) const;
+    inline void get_colors( unsigned int p_border_id
+                          , uint32_t & p_left_color
+                          , uint32_t & p_center_color
+                          , uint32_t & p_right_color
+                          ) const;
+    CUDA_METHOD_HD_I void get_colors( unsigned int p_border_id
+                                    , uint32_t & p_left_color
+                                    , uint32_t & p_right_color
+                                    ) const;
+
+  private:
+    /**
      There are 60 pieces : 4 corners + 4 * 14 borders
      One 32 bits word contains 2 pieces representation
-   **/
-  uint32_t m_pieces[30];
+    **/
+    uint32_t m_pieces[30];
 };
 
 //------------------------------------------------------------------------------
-void border_pieces::set_colors(unsigned int p_border_id, uint32_t p_left_color, uint32_t p_center_color, uint32_t p_right_color)
+void border_pieces::set_colors( unsigned int p_border_id
+                              , uint32_t p_left_color
+                              , uint32_t p_center_color
+                              , uint32_t p_right_color
+                              )
 {
-  assert(p_border_id < 60);
-  assert(p_left_color);
-  assert(p_right_color);
-  assert(p_border_id <= 4 || p_center_color);
-  uint32_t l_color_mask = p_left_color;
-  l_color_mask = (l_color_mask << 5) | p_center_color;
-  l_color_mask = (l_color_mask << 5) | p_right_color;
-  uint32_t l_reset_mask = (p_border_id & 0x1) ? 0xFFFF : 0xFFFF0000;
-  if(p_border_id & 0x1)
+    assert(p_border_id < 60);
+    assert(p_left_color);
+    assert(p_right_color);
+    assert(p_border_id <= 4 || p_center_color);
+    uint32_t l_color_mask = p_left_color;
+    l_color_mask = (l_color_mask << 5) | p_center_color;
+    l_color_mask = (l_color_mask << 5) | p_right_color;
+    uint32_t l_reset_mask = (p_border_id & 0x1) ? 0xFFFF : 0xFFFF0000;
+    if(p_border_id & 0x1)
     {
-      l_color_mask = l_color_mask << 16;
+        l_color_mask = l_color_mask << 16;
     }
-  m_pieces[p_border_id >> 1] &= l_reset_mask;
-  m_pieces[p_border_id >> 1] |= l_color_mask;
+    m_pieces[p_border_id >> 1] &= l_reset_mask;
+    m_pieces[p_border_id >> 1] |= l_color_mask;
 }
 
 //------------------------------------------------------------------------------
-void border_pieces::get_colors(unsigned int p_border_id, uint32_t & p_left_color, uint32_t & p_center_color, uint32_t & p_right_color) const
+void border_pieces::get_colors( unsigned int p_border_id
+                              , uint32_t & p_left_color
+                              , uint32_t & p_center_color
+                              , uint32_t & p_right_color
+                              ) const
 {
-  uint32_t l_color_mask = m_pieces[p_border_id >> 1] >> (16 * (p_border_id & 0x1));
-  p_right_color = l_color_mask & 0x1F;
-  p_center_color = (l_color_mask >> 5) & 0x1F;
-  p_left_color = (l_color_mask >> 10) & 0x1F;
+    uint32_t l_color_mask = m_pieces[p_border_id >> 1] >> (16 * (p_border_id & 0x1));
+    p_right_color = l_color_mask & 0x1F;
+    p_center_color = (l_color_mask >> 5) & 0x1F;
+    p_left_color = (l_color_mask >> 10) & 0x1F;
 }
 
 //------------------------------------------------------------------------------
-void border_pieces::get_colors(unsigned int p_border_id, uint32_t & p_left_color, uint32_t & p_right_color) const
+void border_pieces::get_colors( unsigned int p_border_id
+                              , uint32_t & p_left_color
+                              , uint32_t & p_right_color
+                              ) const
 {
-  uint32_t l_color_mask = m_pieces[p_border_id >> 1] >> (16 * (p_border_id & 0x1));
-  p_right_color = l_color_mask & 0x1F;
-  p_left_color = (l_color_mask >> 10) & 0x1F;
+    uint32_t l_color_mask = m_pieces[p_border_id >> 1] >> (16 * (p_border_id & 0x1));
+    p_right_color = l_color_mask & 0x1F;
+    p_left_color = (l_color_mask >> 10) & 0x1F;
 }
 
 //------------------------------------------------------------------------------
 uint32_t border_pieces::get_left(unsigned int p_border_id) const
 {
-  assert(p_border_id < 60);
-  return (m_pieces[p_border_id >> 1] >> (10 + 16 * (p_border_id & 0x1))) & 0x1F;
+    assert(p_border_id < 60);
+    return (m_pieces[p_border_id >> 1] >> (10 + 16 * (p_border_id & 0x1))) & 0x1F;
 }
 
 //------------------------------------------------------------------------------
 uint32_t border_pieces::get_center(unsigned int p_border_id) const
 {
-  assert(p_border_id < 60);
-  return (m_pieces[p_border_id >> 1] >> (5 + 16 * (p_border_id & 0x1))) & 0x1F;
+    assert(p_border_id < 60);
+    return (m_pieces[p_border_id >> 1] >> (5 + 16 * (p_border_id & 0x1))) & 0x1F;
 }
 
 //------------------------------------------------------------------------------
 uint32_t border_pieces::get_right(unsigned int p_border_id) const
 {
-  assert(p_border_id < 60);
-  return (m_pieces[p_border_id >> 1] >> (16 * (p_border_id & 0x1))) & 0x1F;
+    assert(p_border_id < 60);
+    return (m_pieces[p_border_id >> 1] >> (16 * (p_border_id & 0x1))) & 0x1F;
 }
 
 #endif // _BORDER_PIECES_

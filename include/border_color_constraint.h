@@ -27,93 +27,95 @@
  */
 class border_color_constraint
 {
- public:
-  CUDA_METHOD_HD_I border_color_constraint(bool p_init = false);
-  CUDA_METHOD_HD_I border_color_constraint(const border_color_constraint & p_constraint);
-  CUDA_METHOD_HD_I void operator&(const border_color_constraint & p_constraint);
-  CUDA_METHOD_HD_I void operator&(const uint64_t & p_constraint);
-  CUDA_METHOD_HD_I void operator=(const border_color_constraint & p_constraint);
-  CUDA_METHOD_HD_I void toggle_bit(unsigned int p_index, bool p_value);
+  public:
+    CUDA_METHOD_HD_I border_color_constraint(bool p_init = false);
+    CUDA_METHOD_HD_I border_color_constraint(const border_color_constraint & p_constraint);
+    CUDA_METHOD_HD_I void operator&(const border_color_constraint & p_constraint);
+    CUDA_METHOD_HD_I void operator&(const uint64_t & p_constraint);
+    CUDA_METHOD_HD_I void operator=(const border_color_constraint & p_constraint);
+    CUDA_METHOD_HD_I void toggle_bit(unsigned int p_index, bool p_value);
 
-  CUDA_METHOD_HD_I void fill(bool p_init);
-  inline void set_bit(uint32_t p_index);
-  inline void unset_bit(uint32_t p_index);
+    CUDA_METHOD_HD_I void fill(bool p_init);
+    inline void set_bit(uint32_t p_index);
+    inline void unset_bit(uint32_t p_index);
 
-  inline bool get_bit(uint32_t p_index) const;
+    inline bool get_bit(uint32_t p_index) const;
 
-  CUDA_METHOD_HD_I int ffs(void) const;
+    CUDA_METHOD_HD_I int ffs(void) const;
 
  private:
-  uint64_t m_constraint;
+    uint64_t m_constraint;
 };
 
 //------------------------------------------------------------------------------
-border_color_constraint::border_color_constraint(bool p_init):
-m_constraint(p_init ? UINT64_MAX : 0x0)
+border_color_constraint::border_color_constraint(bool p_init)
+: m_constraint(p_init ? UINT64_MAX : 0x0)
 {
 }
 
 //------------------------------------------------------------------------------
-border_color_constraint::border_color_constraint(const border_color_constraint & p_constraint):
-m_constraint(p_constraint.m_constraint)
+border_color_constraint::border_color_constraint(const border_color_constraint & p_constraint)
+: m_constraint(p_constraint.m_constraint)
 {
 }
 
 //------------------------------------------------------------------------------
 void border_color_constraint::operator=(const border_color_constraint & p_constraint)
 {
-  m_constraint = p_constraint.m_constraint;  
+    m_constraint = p_constraint.m_constraint;
 }
 
 //------------------------------------------------------------------------------
 void border_color_constraint::operator&(const border_color_constraint & p_constraint)
 {
-  m_constraint &= p_constraint.m_constraint;  
+    m_constraint &= p_constraint.m_constraint;
 }
 
 //------------------------------------------------------------------------------
 void border_color_constraint::operator&(const uint64_t & p_constraint)
 {
-  m_constraint &= p_constraint;  
+    m_constraint &= p_constraint;
 }
 
 //------------------------------------------------------------------------------
-void border_color_constraint::toggle_bit(unsigned int p_index, bool p_value)
+void border_color_constraint::toggle_bit( unsigned int p_index
+                                        , bool p_value
+                                        )
 {
-  m_constraint ^= ((uint64_t)p_value) << p_index;
+    m_constraint ^= ((uint64_t)p_value) << p_index;
 }
 
 //------------------------------------------------------------------------------
 void border_color_constraint::fill(bool p_init)
 {
-  m_constraint = p_init ?  UINT64_MAX : 0x0;
+    m_constraint = p_init ?  UINT64_MAX : 0x0;
 }
 
 //------------------------------------------------------------------------------
 void border_color_constraint::set_bit(uint32_t p_index)
 {
-  m_constraint |= ((uint64_t)0x1) << p_index;
+    m_constraint |= ((uint64_t)0x1) << p_index;
 }
 
 //------------------------------------------------------------------------------
 void border_color_constraint::unset_bit(uint32_t p_index)
 {
-  m_constraint &= ~(((uint64_t)0x1) << p_index);
+    m_constraint &= ~(((uint64_t)0x1) << p_index);
 }
 
 //------------------------------------------------------------------------------
 bool border_color_constraint::get_bit(uint32_t p_index) const
 {
-  return m_constraint & (((uint64_t)0x1) << p_index);
+    return m_constraint & (((uint64_t)0x1) << p_index);
 }
 
 //------------------------------------------------------------------------------
 int border_color_constraint::ffs(void) const
 {
 #ifdef __CUDA_ARCH__
-  return __ffsll(m_constraint);
+    return __ffsll(m_constraint);
 #else
-  return ::ffsll(m_constraint);
+    return ::ffsll(m_constraint);
 #endif
 }
 

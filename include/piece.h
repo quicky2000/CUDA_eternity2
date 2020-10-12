@@ -23,43 +23,49 @@
 
 class piece
 {
-public:
-  inline piece(void);
+  public:
+    inline piece();
 
-  inline void set_color(uint8_t p_north_color,
-			unsigned int p_orientation);
+    inline void set_color( uint8_t p_north_color
+                         , unsigned int p_orientation
+                         );
 
-  CUDA_METHOD_HD_I uint8_t get_color(unsigned int p_side) const;
+    CUDA_METHOD_HD_I uint8_t get_color(unsigned int p_side) const;
 
-  CUDA_METHOD_HD_I uint8_t get_color(unsigned int p_side, unsigned int p_orientation) const;
-private:
-  uint8_t m_colors[4];
+    CUDA_METHOD_HD_I uint8_t get_color( unsigned int p_side
+                                      , unsigned int p_orientation
+                                      ) const;
+  private:
+    uint8_t m_colors[4];
 };
 
 //------------------------------------------------------------------------------
-piece::piece(void):
-  m_colors{0,0,0,0}
+piece::piece()
+: m_colors{0,0,0,0}
 {
 }
 
 //------------------------------------------------------------------------------
-void piece::set_color(uint8_t p_color,
-		      unsigned int p_orientation)
+void piece::set_color( uint8_t p_color
+                     , unsigned int p_orientation
+                     )
 {
-  m_colors[p_orientation] = p_color;
+    m_colors[p_orientation] = p_color;
 }
 
 //------------------------------------------------------------------------------
 uint8_t piece::get_color(unsigned int p_side) const
 {
-  assert(p_side <= 3);
-  return m_colors[p_side];
+    assert(p_side <= 3);
+    return m_colors[p_side];
 }
 
 //------------------------------------------------------------------------------
-uint8_t piece::get_color(unsigned int p_side, unsigned int p_orientation) const
+uint8_t piece::get_color( unsigned int p_side
+                        , unsigned int p_orientation
+                        ) const
 {
-  return get_color((p_side + p_orientation) & 0x3);
+    return get_color((p_side + p_orientation) & 0x3);
 }
 
 #endif // _PIECE_H_

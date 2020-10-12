@@ -23,25 +23,25 @@ class border_pieces;
 class border_color_constraint;
 class octet_array;
 
-int launch_border_bactracker(unsigned int p_nb_cases,
-			     unsigned int p_nb_block,
-			     unsigned int p_nb_thread,
-			     const std::string & p_initial_situation,
-			     const border_pieces & p_border_pieces,
-			     border_color_constraint  (&p_border_constraints)[23],
-			     const unsigned int (&p_border_edges)[60],
-			     const std::map<unsigned int, unsigned int> & p_B2C_color_count,
-			     const std::map<unsigned int, unsigned int> & p_reorganised_colors
-			     );
+int launch_border_bactracker( unsigned int p_nb_cases
+                            , unsigned int p_nb_block
+                            , unsigned int p_nb_thread
+                            , const std::string & p_initial_situation
+                            , const border_pieces & p_border_pieces
+                            , border_color_constraint  (&p_border_constraints)[23]
+                            , const unsigned int (&p_border_edges)[60]
+                            , const std::map<unsigned int, unsigned int> & p_B2C_color_count
+                            , const std::map<unsigned int, unsigned int> & p_reorganised_colors
+                            );
 
-void extract_initial_constraint(const std::string & p_situation_string,
-				octet_array & p_initial_constraint,
-				const border_pieces & p_border_pieces
-				);
+void extract_initial_constraint( const std::string & p_situation_string
+                               , octet_array & p_initial_constraint
+                               , const border_pieces & p_border_pieces
+                               );
 
-void constraint_to_string(std::string & p_result,
-			  const octet_array & p_situation,
-			  const unsigned int (&p_border_edges)[60]
-			  );
+void constraint_to_string( std::string & p_result
+                         , const octet_array & p_situation
+                         , const unsigned int (&p_border_edges)[60]
+                         );
 #endif // _BORDER_BACK_TRACKER_H_
 // EOF

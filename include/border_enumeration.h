@@ -23,141 +23,149 @@
 
 class symbol
 {
-  friend std::ostream & operator<<(std::ostream & p_stream, const symbol & p_symbol);
-public:
-  inline symbol(unsigned int p_index,
-		unsigned int p_number);
-  inline unsigned int get_index(void) const;
-  inline unsigned int get_number(void) const;
-  inline void decr(void);
-  inline void incr(void);
-private:
-  unsigned int m_index;
-  unsigned int m_number;
-  unsigned int m_max_number;
+    friend std::ostream & operator<<(std::ostream & p_stream, const symbol & p_symbol);
+
+  public:
+    inline symbol( unsigned int p_index
+                 , unsigned int p_number
+                 );
+    inline unsigned int get_index() const;
+    inline unsigned int get_number() const;
+    inline void decr();
+    inline void incr();
+
+  private:
+
+    unsigned int m_index;
+    unsigned int m_number;
+    unsigned int m_max_number;
 };
 
-std::ostream & operator<<(std::ostream & p_stream, const symbol & p_symbol)
+std::ostream & operator<<( std::ostream & p_stream
+                         , const symbol & p_symbol
+                         )
 {
   p_stream << (char)('A' - 1 + p_symbol.m_index) ;
   return p_stream;
 }
 
 //------------------------------------------------------------------------------
-symbol::symbol(unsigned int p_index,
-	       unsigned int p_number):
-  m_index(p_index),
-  m_number(p_number),
-  m_max_number(p_number)
+symbol::symbol( unsigned int p_index
+              , unsigned int p_number
+              )
+: m_index(p_index)
+, m_number(p_number)
+, m_max_number(p_number)
 {
 }
 
 //------------------------------------------------------------------------------
-unsigned int symbol::get_index(void) const
+unsigned int symbol::get_index() const
 {
-  return m_index;
+    return m_index;
 }
 
 //------------------------------------------------------------------------------
-unsigned int symbol::get_number(void) const
+unsigned int symbol::get_number() const
 {
-  return m_number;
+    return m_number;
 }
 
 //------------------------------------------------------------------------------
-void symbol::decr(void)
+void symbol::decr()
 {
-  assert(m_number);
-  --m_number;
+    assert(m_number);
+    --m_number;
 }
 
 //------------------------------------------------------------------------------
-void symbol::incr(void)
+void symbol::incr()
 {
-  assert(m_number < m_max_number);
-  ++m_number;
+    assert(m_number < m_max_number);
+    ++m_number;
 }
 
 //------------------------------------------------------------------------------
-void enumerate(void)
+void enumerate()
 {
-  symbol l_symbol_table[3] = {symbol(1,1),symbol(2,2),symbol(3,3)};
-  unsigned int l_nb_symbol = 3; 
-  unsigned int l_word[6];
-  for(unsigned int l_index = 0 ; l_index < 6 ; ++l_index)
+    symbol l_symbol_table[3] = {symbol(1,1),symbol(2,2),symbol(3,3)};
+    unsigned int l_nb_symbol = 3;
+    unsigned int l_word[6];
+    for(unsigned int l_index = 0 ; l_index < 6 ; ++l_index)
     {
-      l_word[l_index] = 0;
+        l_word[l_index] = 0;
     }
-  unsigned int l_index = 0;
-  unsigned int l_count = 0;
-  bool l_end = false;
-  while(!l_end)
+    unsigned int l_index = 0;
+    unsigned int l_count = 0;
+    bool l_end = false;
+    while(!l_end)
     {
-      if(0 == l_word[l_index])
-	{
-	  unsigned int l_symbol_index = 0;
-	  while(0 == l_symbol_table[l_symbol_index].get_number())
-	    {
-	      ++l_symbol_index;
-	    }
-	  l_word[l_index] = l_symbol_table[l_symbol_index].get_index();
-	  l_symbol_table[l_symbol_index].decr();
-	  ++l_index;
-	}
+        if(0 == l_word[l_index])
+        {
+            unsigned int l_symbol_index = 0;
+            while(0 == l_symbol_table[l_symbol_index].get_number())
+            {
+                ++l_symbol_index;
+            }
+            l_word[l_index] = l_symbol_table[l_symbol_index].get_index();
+            l_symbol_table[l_symbol_index].decr();
+            ++l_index;
+        }
 
-      if(6 == l_index)
-	{
-	  std::cout << l_count << "\t" ;
-	  for(unsigned int l_display_index = 0 ; l_display_index < 6; ++l_display_index)
-	    {
-	      std::cout << (char)('A' - 1 + l_word[l_display_index]);
-	    }
-	  std::cout << std::endl ;
-	  ++l_count;
-	  l_index = 5;
-	  //	  l_symbol_table[l_word[l_index] - 1].incr();
-	  //	  l_word[l_index] = 0;
-	  //	  l_index = 4;
-	  bool l_reverse_end = false;
-	  while(!l_reverse_end)
-	    {
-	      if(l_nb_symbol == l_word[l_index])
-		{
-		  l_symbol_table[l_word[l_index] - 1].incr();
-		  l_word[l_index] = 0;
-		  if(l_index)
-		    {
-		      --l_index;
-		    }
-		  else
-		    {
-		      l_end = true;
-		      l_reverse_end = true;
-		    }
-		}
-	      else
-		{
-		  unsigned int l_old = l_word[l_index];
-		  l_symbol_table[l_old - 1].incr();
-		  l_word[l_index] = 0;
-		  for(unsigned int l_candidate = l_old + 1; l_candidate <= l_nb_symbol && ! l_reverse_end; ++ l_candidate)
-		    {
-		      if(l_symbol_table[l_candidate - 1].get_number())
-			{
-			  l_word[l_index] = l_candidate;
-			  l_symbol_table[l_candidate - 1].decr();
-			  ++l_index;
-			  l_reverse_end = true;
-			}
-		    }
-		  if(!l_reverse_end)
-		    {
-		      --l_index;
-		    }
-		}
-	    }
-	}
+        if(6 == l_index)
+        {
+            std::cout << l_count << "\t" ;
+            for(unsigned int l_display_index = 0 ; l_display_index < 6; ++l_display_index)
+            {
+                std::cout << (char)('A' - 1 + l_word[l_display_index]);
+            }
+            std::cout << std::endl ;
+            ++l_count;
+            l_index = 5;
+            //	  l_symbol_table[l_word[l_index] - 1].incr();
+            //	  l_word[l_index] = 0;
+            //	  l_index = 4;
+            bool l_reverse_end = false;
+            while(!l_reverse_end)
+            {
+                if(l_nb_symbol == l_word[l_index])
+                {
+                    l_symbol_table[l_word[l_index] - 1].incr();
+                    l_word[l_index] = 0;
+                    if(l_index)
+                    {
+                        --l_index;
+                    }
+                    else
+                    {
+                        l_end = true;
+                        l_reverse_end = true;
+                    }
+                }
+                else
+                {
+                    unsigned int l_old = l_word[l_index];
+                    l_symbol_table[l_old - 1].incr();
+                    l_word[l_index] = 0;
+                    for(unsigned int l_candidate = l_old + 1; l_candidate <= l_nb_symbol && ! l_reverse_end; ++ l_candidate)
+                    {
+                        if(l_symbol_table[l_candidate - 1].get_number())
+                        {
+                            l_word[l_index] = l_candidate;
+                            l_symbol_table[l_candidate - 1].decr();
+                            ++l_index;
+                            l_reverse_end = true;
+                        }
+                    }
+                    if(!l_reverse_end)
+                    {
+                        --l_index;
+                    }
+                }
+            }
+        }
     }
 }
 
 #endif // _BORDER_ENUMERATION_H_
+// EOF
