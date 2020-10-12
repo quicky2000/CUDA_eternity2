@@ -28,55 +28,61 @@
 #include <chrono>
 #include <unistd.h>
 
-extern CUDA_KERNEL(border_backtracker_kernel,
-		   const border_pieces & p_border_pieces,
-		   border_color_constraint  (&p_border_constraints)[23],
-		   octet_array * p_initial_constraint
-		   );
+extern CUDA_KERNEL( border_backtracker_kernel
+                  , const border_pieces & p_border_pieces
+                  , border_color_constraint  (&p_border_constraints)[23]
+                  , octet_array * p_initial_constraint
+                  );
 
 class border_exploration
 {
- public:
-    border_exploration(const std::map<unsigned int, unsigned int> & p_B2C_color_count,
-                       const std::map<unsigned int, unsigned int> & p_reorganised_colors,
-                       border_color_constraint  (&p_border_constraints)[23],
-                       const border_pieces & p_border_pieces,
-                       const std::string & p_situation_string
-                       );
-    inline ~border_exploration(void);
-    void run(const unsigned int (&p_border_edges)[60]);
- private:
-  inline static void periodic_display(const std::atomic<bool> & p_stop,
-				      std::atomic<bool> & p_display
-				      );
+  public:
+    border_exploration( const std::map<unsigned int, unsigned int> & p_B2C_color_count
+                      , const std::map<unsigned int, unsigned int> & p_reorganised_colors
+                      , border_color_constraint  (&p_border_constraints)[23]
+                      , const border_pieces & p_border_pieces
+                      , const std::string & p_situation_string
+                      );
 
-  border_color_constraint  m_border_constraints[23];
-  border_pieces m_border_pieces;
-  combinatorics::enumerator * m_enumerator;
-  unsigned int * m_reference_word;
+    inline
+    ~border_exploration();
+
+    void run(const unsigned int (&p_border_edges)[60]);
+
+  private:
+
+    inline static
+    void periodic_display( const std::atomic<bool> & p_stop
+                         , std::atomic<bool> & p_display
+                         );
+
+    border_color_constraint  m_border_constraints[23];
+    border_pieces m_border_pieces;
+    combinatorics::enumerator * m_enumerator;
+    unsigned int * m_reference_word;
 };
 
 //-----------------------------------------------------------------------------
 border_exploration::~border_exploration(void)
 {
-  delete m_enumerator;
-  delete m_reference_word;
+    delete m_enumerator;
+    delete m_reference_word;
 }
 
 //------------------------------------------------------------------------------
-void border_exploration::periodic_display(const std::atomic<bool> & p_stop,
-					  std::atomic<bool> & p_display
-					  )
+void border_exploration::periodic_display( const std::atomic<bool> & p_stop
+                                         , std::atomic<bool> & p_display
+                                         )
 {
-  std::cout << "Launching thread" << std::endl;
-  while(!static_cast<bool>(p_stop))
+    std::cout << "Launching thread" << std::endl;
+    while(!static_cast<bool>(p_stop))
     {
-      std::this_thread::sleep_for(std::chrono::minutes(10));
-      p_display = true;
-      while(p_display)
-	{
-	  usleep(1);
-	}
+        std::this_thread::sleep_for(std::chrono::minutes(10));
+        p_display = true;
+        while(p_display)
+        {
+            usleep(1);
+        }
     }
 }
 #endif // _BORDER_EXPLORATION_H_

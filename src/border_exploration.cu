@@ -17,14 +17,14 @@
 #include "border_exploration.h"
 
 //-----------------------------------------------------------------------------
-border_exploration::border_exploration(const std::map<unsigned int, unsigned int> & p_B2C_color_count,
-                                       const std::map<unsigned int, unsigned int> & p_reorganised_colors,
-                                       border_color_constraint  (&p_border_constraints)[23],
-                                       const border_pieces & p_border_pieces,
-                                       const std::string & p_situation_string
-                                      ):
-        m_enumerator(nullptr),
-        m_reference_word(nullptr)
+border_exploration::border_exploration( const std::map<unsigned int, unsigned int> & p_B2C_color_count
+                                      , const std::map<unsigned int, unsigned int> & p_reorganised_colors
+                                      , border_color_constraint  (&p_border_constraints)[23]
+                                      , const border_pieces & p_border_pieces
+                                      , const std::string & p_situation_string
+                                      )
+: m_enumerator(nullptr)
+, m_reference_word(nullptr)
 {
     // Iterate on reorganised colors to count their number
     std::vector<combinatorics::symbol> l_symbols;
@@ -62,9 +62,7 @@ border_exploration::border_exploration(const std::map<unsigned int, unsigned int
     std::cout << std::endl;
     // Rebuild border constraints using the reorganised colors
     m_border_constraints[0] = p_border_constraints[0];
-    for(unsigned int l_index = 1;
-        l_index < 23;
-        ++l_index)
+    for(unsigned int l_index = 1; l_index < 23; ++l_index)
     {
         std::map<unsigned int, unsigned int>::const_iterator l_iter = p_reorganised_colors.find(l_index);
         assert(p_reorganised_colors.end() != l_iter);
@@ -72,9 +70,7 @@ border_exploration::border_exploration(const std::map<unsigned int, unsigned int
     }
 
     // Rebuild border pieces using the reorganised colors
-    for(unsigned int l_index = 0;
-        l_index < 60;
-        ++l_index)
+    for(unsigned int l_index = 0; l_index < 60; ++l_index)
     {
         uint32_t l_left_color;
         uint32_t l_center_color;
@@ -99,14 +95,12 @@ border_exploration::border_exploration(const std::map<unsigned int, unsigned int
     if("" != p_situation_string)
     {
         octet_array l_solution_example;
-        extract_initial_constraint(p_situation_string,
-                                   l_solution_example,
-                                   m_border_pieces
+        extract_initial_constraint( p_situation_string
+                                  , l_solution_example
+                                  , m_border_pieces
                                   );
         unsigned int * l_solution_word = new unsigned int[m_enumerator->get_word_size()];
-        for(unsigned int l_index = 0;
-            l_index < 56;
-            ++l_index)
+        for(unsigned int l_index = 0; l_index < 56; ++l_index)
         {
             //	  std::cout << l_solution_example.get_octet((1 + l_index + l_index / ( 56 /4 ))) << std::endl;
             l_solution_word[l_index] = l_solution_example.get_octet((1 + l_index + l_index / ( 56 /4 )));
@@ -120,9 +114,12 @@ border_exploration::border_exploration(const std::map<unsigned int, unsigned int
         delete[] l_solution_word;
         dim3 dimBlock(1,1);
         dim3 dimGrid(1,1);
-        launch_kernels(border_backtracker_kernel,dimGrid,dimBlock, m_border_pieces,
-                       m_border_constraints,
-                       &l_solution_example
+        launch_kernels( border_backtracker_kernel
+                      , dimGrid
+                      , dimBlock
+                      , m_border_pieces
+                      , m_border_constraints
+                      , &l_solution_example
                       );
         std::cout << "==> Corner = " << l_solution_example.get_octet(0) << std::endl ;
         std::cout << "Max = " << l_solution_example.get_octet(59) << std::endl ;
@@ -150,18 +147,18 @@ void border_exploration::run(const unsigned int (&p_border_edges)[60])
         l_continu = m_enumerator->compare_word(m_reference_word) < 0;
         if(l_continu)
         {
-            for(unsigned int l_index = 0;
-                l_index < 56;
-                ++l_index
-                    )
+            for(unsigned int l_index = 0; l_index < 56; ++l_index)
             {
-                l_initial_constraint.set_octet((1 + l_index + l_index / ( 56 / 4 )),
-                                               m_enumerator->get_word_item(l_index)
+                l_initial_constraint.set_octet((1 + l_index + l_index / ( 56 / 4 ))
+                                              , m_enumerator->get_word_item(l_index)
                                               );
             }
-            launch_kernels(border_backtracker_kernel,dimGrid,dimBlock, m_border_pieces,
-                           m_border_constraints,
-                           &l_initial_constraint
+            launch_kernels( border_backtracker_kernel
+                          , dimGrid
+                          , dimBlock
+                          , m_border_pieces
+                          , m_border_constraints
+                          , &l_initial_constraint
                           );
             if(!l_initial_constraint.get_octet(0))
             {
