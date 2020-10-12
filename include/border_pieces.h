@@ -38,6 +38,9 @@
 class border_pieces
 {
   public:
+    inline
+    border_pieces();
+
     inline void set_colors( unsigned int p_border_id
                           , uint32_t p_left_color
                           , uint32_t p_center_color
@@ -64,6 +67,16 @@ class border_pieces
     **/
     uint32_t m_pieces[30];
 };
+
+//------------------------------------------------------------------------------
+border_pieces::border_pieces()
+: m_pieces{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+          , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+          , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+          }
+{
+
+}
 
 //------------------------------------------------------------------------------
 void border_pieces::set_colors( unsigned int p_border_id
