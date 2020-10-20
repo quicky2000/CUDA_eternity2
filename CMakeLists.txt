@@ -28,7 +28,13 @@ set(MY_SOURCE_FILES
     src/border_backtracker.cu
     src/border_exploration.cu
     src/eternity2.cu
+    include/situation_utils.h
+    include/situation_capability.h
+    include/piece_position_info.h
+    src/situation_utils.cu
+    src/situation_utils.cpp
    )
+
 
 
 # List header directories in project

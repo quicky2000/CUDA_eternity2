@@ -30,6 +30,7 @@
 #include "border_exploration.h"
 #include <map>
 #include <set>
+#include "situation_utils.h"
 
 int launch_cuda_code(piece (&p_pieces)[197], constraint (&p_constraints)[18][4]);
 
@@ -242,6 +243,10 @@ int main(int argc,char ** argv)
                                                     , l_initial_situation
                                                     );
                 l_border_explorer.run(l_border_edges);
+            }
+            else if("test_cuda" == l_feature)
+            {
+                CUDA_eternity2::launch();
             }
 #ifdef ACTIVATE_ETERNITY2_KERNEL
             else if("old_cuda" == l_feature)
