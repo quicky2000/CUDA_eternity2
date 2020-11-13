@@ -15,6 +15,7 @@
       You should have received a copy of the GNU General Public License
       along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
+#ifdef ENABLE_CUDA_CODE
 #include "situation_capability.h"
 #include "situation_utils.h"
 
@@ -70,4 +71,6 @@ namespace CUDA_eternity2
         launch(l_nb_transition, l_situation_capability, l_results, l_transitions);
     }
 }
+#endif // ENABLE_CUDA_CODE
+
 // EOF

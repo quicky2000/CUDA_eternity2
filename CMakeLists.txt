@@ -6,36 +6,43 @@ project(CUDA_eternity2 LANGUAGES CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_CXX_STANDARD 17)
+set(ENABLE_CUDA_CODE off)
 
 set(MY_SOURCE_FILES
     include/situation_orientation.h
     include/constraint.h
-    include/border_pieces.h
     include/border_exploration.h
+    include/border_pieces.h
     include/nibble6_array.h
     include/piece.h
+    include/situation_utils.h
     include/border_backtracker.h
+    include/piece_position_info.h
     include/center_color_db.h
     include/situation.h
     include/border_color_constraint.h
     include/eternity2_pieces.h
     include/eternity2_types.h
+    include/situation_capability.h
     include/nibble5_array.h
     include/border_enumeration.h
     include/octet_array.h
     include/nibble3_array.h
     include/border_constraint_generator.h
-    src/border_backtracker.cu
-    src/border_exploration.cu
-    src/eternity2.cu
-    include/situation_utils.h
-    include/situation_capability.h
-    include/piece_position_info.h
-    src/situation_utils.cu
     src/situation_utils.cpp
    )
 
-
+if(${ENABLE_CUDA_CODE})
+    set (MY_CPP_FLAGS -DENABLE_CUDA_CODE)
+    set (MY_SOURCE_FILES ${MY_SOURCE_FILES}
+         src/border_exploration.cu
+         src/border_backtracker.cu
+         src/situation_utils.cu
+         src/eternity2.cu
+        )
+else()
+    set (MY_CPP_FLAGS -pedantic)
+endif(${ENABLE_CUDA_CODE})
 
 # List header directories in project
 set(MY_INCLUDE_DIRECTORIES

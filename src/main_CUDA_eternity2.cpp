@@ -223,6 +223,7 @@ int main(int argc,char ** argv)
 
             if("border_backtracker" == l_feature)
             {
+#ifdef ENABLE_CUDA_CODE
                 launch_border_bactracker( l_nb_cases
                                         , l_nb_block
                                         , l_block_size
@@ -233,9 +234,13 @@ int main(int argc,char ** argv)
                                         , l_B2C_color_count
                                         , l_reorganised_B_colors
                                         );
+#else // ENABLE_CUDA_CODE
+                throw quicky_exception::quicky_logic_exception(R"(You must enable CUDA code for feature ")" + l_feature +R"(")", __LINE__, __FILE__);
+#endif // ENABLE_CUDA_CODE
             }
             else if("border_exploration" == l_feature)
             {
+#ifdef ENABLE_CUDA_CODE
                 border_exploration l_border_explorer( l_B2C_color_count
                                                     , l_reorganised_all_colors
                                                     , l_border_constraints
@@ -243,10 +248,17 @@ int main(int argc,char ** argv)
                                                     , l_initial_situation
                                                     );
                 l_border_explorer.run(l_border_edges);
+#else // ENABLE_CUDA_CODE
+                throw quicky_exception::quicky_logic_exception(R"(You must enable CUDA code for feature ")" + l_feature +R"(")", __LINE__, __FILE__);
+#endif // ENABLE_CUDA_CODE
             }
             else if("test_cuda" == l_feature)
             {
+#ifdef ENABLE_CUDA_CODE
                 CUDA_eternity2::launch();
+#else // ENABLE_CUDA_CODE
+                throw quicky_exception::quicky_logic_exception(R"(You must enable CUDA code for feature ")" + l_feature +R"(")", __LINE__, __FILE__);
+#endif // ENABLE_CUDA_CODE
             }
 #ifdef ACTIVATE_ETERNITY2_KERNEL
             else if("old_cuda" == l_feature)
