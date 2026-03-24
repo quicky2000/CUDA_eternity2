@@ -4,8 +4,6 @@ matrix:
       sudo: required
       dist: bionic
       compiler: gcc
-    - os: osx
-      osx_image: xcode10.3
 
 language: cpp
 
@@ -32,7 +30,8 @@ before_install:
   - chmod a+x repositories/quicky_tools/bin/*
 
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir build; cd build; generate_makefile CUDA_eternity2 ; make test enable_cuda=0; fi
+  - mkdir build; cd build; generate_makefile CUDA_eternity2
+  - make test enable_cuda=0
   - cd $MY_LOCATION ; mkdir cmake_build ; cd cmake_build ; cmake $QUICKY_REPOSITORY/CUDA_eternity2
   - make
 #EOF
